@@ -6,7 +6,8 @@
     "dev": "next dev --webpack",
     "build": "next build --webpack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "preinstall": "npx npm@9 install --legacy-peer-deps --no-audit --no-fund"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
