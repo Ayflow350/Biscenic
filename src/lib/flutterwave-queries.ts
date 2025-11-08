@@ -4,7 +4,7 @@ import axios from "axios";
 import { toast } from "sonner";
 
 // The API URL is now hardcoded for testing purposes.
-const API_URL = "http://localhost:5050/api/payments";
+const API_URL = "http://localhost:5001/api/payments";
 
 interface InitializePaymentData {
   email: string;

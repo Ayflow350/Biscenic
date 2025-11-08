@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense, useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -14,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Form,
   FormControl,
@@ -21,9 +23,8 @@ import {
   FormItem,
   FormMessage,
 } from "@/components/ui/form";
-import { postSignUp } from "@/lib/SignupApi"; // Ensure this path is correct
+import { postSignUp } from "@/lib/SignupApi";
 
-// This schema provides instant client-side validation feedback.
 const formSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
   email: z.string().email({ message: "Please enter a valid email address." }),
@@ -39,23 +40,51 @@ const GoogleIcon = () => (
     <path
       fill="#FFC107"
       d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12s5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24s8.955,20,20,20s20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"
-    ></path>
+    />
     <path
       fill="#FF3D00"
       d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"
-    ></path>
+    />
     <path
       fill="#4CAF50"
       d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.222,0-9.519-3.487-11.011-8.422l-6.522,5.025C9.505,39.556,16.227,44,24,44z"
-    ></path>
+    />
     <path
       fill="#1976D2"
       d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571l6.19,5.238C43.021,36.251,44,30.651,44,24C44,22.659,43.862,21.35,43.611,20.083z"
-    ></path>
+    />
   </svg>
 );
 
 export default function SignUpPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="lg:grid lg:min-h-screen lg:grid-cols-2 w-full">
+          {/* Left skeleton */}
+          <div className="flex min-h-screen items-center justify-center py-12 px-4 bg-black lg:min-h-0">
+            <div className="mx-auto w-full max-w-sm space-y-6">
+              <Skeleton className="h-10 w-3/4 rounded-md" />
+              <Skeleton className="h-5 w-full rounded-md" />
+              <Skeleton className="h-10 w-full rounded-md" />
+              <Skeleton className="h-10 w-full rounded-md" />
+              <Skeleton className="h-10 w-full rounded-md" />
+            </div>
+          </div>
+
+          {/* Right skeleton */}
+          <div className="hidden lg:block relative">
+            <Skeleton className="h-full w-full" />
+          </div>
+        </div>
+      }
+    >
+      <SignUpForm />
+    </Suspense>
+  );
+}
+
+function SignUpForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -66,7 +95,7 @@ export default function SignUpPage() {
 
   const { mutate, isPending } = useMutation({
     mutationFn: postSignUp,
-    onSuccess: (data) => {
+    onSuccess: () => {
       toast.success("Account Created!", {
         description:
           "Your account was created successfully. Please sign in to continue.",
@@ -76,30 +105,22 @@ export default function SignUpPage() {
       const fromPage = searchParams.get("from");
       const signInUrl = fromPage ? `/signin?from=${fromPage}` : "/signin";
 
-      setTimeout(() => {
-        router.push(signInUrl);
-      }, 1500);
+      setTimeout(() => router.push(signInUrl), 1500);
     },
-    onError: (error) => {
-      if (error.message.includes("already exists")) {
-        toast.error("Sign Up Failed", {
-          description:
-            "An account with this email already exists. Please try signing in.",
-        });
-      } else {
-        toast.error("Something Went Wrong", {
-          description: "We couldn't create your account. Please try again.",
-        });
-      }
+    onError: (error: any) => {
+      toast.error("Sign Up Failed", {
+        description: error?.message.includes("already exists")
+          ? "An account with this email already exists. Please try signing in."
+          : "We couldn't create your account. Please try again.",
+      });
     },
   });
 
-  const onSubmit = (values: SignUpFormData) => {
-    mutate(values);
-  };
+  const onSubmit = (values: SignUpFormData) => mutate(values);
 
   return (
     <div className="w-full lg:grid lg:min-h-screen lg:grid-cols-2">
+      {/* Left column */}
       <div className="dark flex min-h-screen items-center justify-center py-12 px-4 bg-black text-white lg:min-h-0">
         <div className="mx-auto grid w-full max-w-sm gap-6">
           <div className="grid gap-2">
@@ -115,6 +136,7 @@ export default function SignUpPage() {
                 <GoogleIcon />
                 <span className="ml-2">Sign up with Google</span>
               </Button>
+
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
                   <span className="w-full border-t" />
@@ -189,6 +211,7 @@ export default function SignUpPage() {
                   I agree to all Terms & Conditions
                 </label>
               </div>
+
               <Button
                 type="submit"
                 className="w-full bg-white text-black hover:bg-gray-200"
@@ -207,6 +230,8 @@ export default function SignUpPage() {
           </div>
         </div>
       </div>
+
+      {/* Right column */}
       <div className="hidden bg-muted lg:block relative">
         <div
           className="absolute inset-0"
@@ -229,7 +254,7 @@ export default function SignUpPage() {
             </h2>
             <p className="text-gray-300">
               Our practice is Designing Complete Environments exceptional
-              buildings communities and place in special situations
+              buildings communities and places in special situations
             </p>
             <div className="flex items-center gap-4 pt-4">
               <div className="flex items-center gap-2 rounded-full border border-white/30 bg-white/10 px-4 py-2 backdrop-blur-sm">
