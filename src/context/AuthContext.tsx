@@ -1,97 +1,85 @@
 // context/AuthContext.tsx
 "use client";
 
-import React, {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  ReactNode,
-} from "react";
-import { useRouter } from "next/navigation";
+import { createContext, useContext, useEffect, useState } from "react";
 
 interface User {
   id: string;
-  name: string;
   email: string;
-  role: string;
+  name?: string;
+  role?: "admin" | "customer" | "guest"; // <-- added role
 }
 
 interface AuthContextType {
   user: User | null;
-  setUser: (user: User | null) => void;
+  token: string | null;
   isLoading: boolean;
-  logout: () => Promise<void>;
+  setUser: (user: User | null) => void;
+  setToken: (token: string | null) => void;
+  logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [token, setTokenState] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const router = useRouter();
 
   useEffect(() => {
-    const checkUserSession = async () => {
-      // --- ADDED LOGGING ---
-      const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/users/me/profile`;
-      console.log("[AuthContext] Checking user session at URL:", apiUrl);
-      // ---------------------
+    const storedToken = localStorage.getItem("token");
+    const storedUser = localStorage.getItem("user");
 
-      try {
-        const response = await fetch(
-          apiUrl, // Use the logged variable
-          {
-            credentials: "include",
-          }
-        );
+    console.log("[AuthContext] Loading from localStorage...");
+    console.log("Token found:", storedToken);
+    console.log("User found:", storedUser ? JSON.parse(storedUser) : null);
 
-        console.log(
-          "[AuthContext] Session check response status:",
-          response.status
-        );
+    if (storedToken) setTokenState(storedToken);
+    if (storedUser) setUser(JSON.parse(storedUser));
 
-        if (response.ok) {
-          const data = await response.json();
-          console.log(
-            "[AuthContext] Session found, setting user:",
-            data.user || data
-          );
-          setUser(data.user || data);
-        } else {
-          console.log("[AuthContext] No active session found.");
-          setUser(null);
-        }
-      } catch (error) {
-        // This is where your "TypeError: Failed to fetch" is caught.
-        console.error(
-          "[AuthContext] CRITICAL: Failed to fetch user session. This is likely a network, CORS, or .env issue.",
-          error
-        );
-        setUser(null);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    checkUserSession();
+    setIsLoading(false);
   }, []);
 
-  const logout = async () => {
-    /* ... your logout logic ... */
+  const setToken = (newToken: string | null) => {
+    console.log("[AuthContext] Setting token:", newToken);
+    setTokenState(newToken);
+    if (newToken) localStorage.setItem("token", newToken);
+    else localStorage.removeItem("token");
   };
 
-  return (
-    <AuthContext.Provider value={{ user, setUser, isLoading, logout }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  const setUserWithLog = (newUser: User | null) => {
+    console.log("[AuthContext] Setting user:", newUser);
+    setUser(newUser);
+    if (newUser) localStorage.setItem("user", JSON.stringify(newUser));
+    else localStorage.removeItem("user");
+  };
+
+  const logout = () => {
+    console.log("[AuthContext] Logging out...");
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    setUser(null);
+    setTokenState(null);
+  };
+
+  const value: AuthContextType = {
+    user,
+    token,
+    isLoading,
+    setUser: setUserWithLog,
+    setToken,
+    logout,
+  };
+
+  useEffect(() => {
+    console.log("[AuthContext] Current state:", { user, token, isLoading });
+  }, [user, token, isLoading]);
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
+  if (!context) throw new Error("useAuth must be used within an AuthProvider");
   return context;
 };

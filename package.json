@@ -6,8 +6,7 @@
     "dev": "next dev --webpack",
     "build": "next build --webpack",
     "start": "next start",
-    "lint": "eslint",
-    "preinstall": "npx npm@9 install --legacy-peer-deps --no-audit --no-fund"
+    "lint": "eslint"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -24,9 +23,9 @@
     "@radix-ui/react-switch": "^1.2.6",
     "@tanstack/react-query": "^5.90.5",
     "@tanstack/react-table": "^8.21.3",
+    "axios": "^1.13.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "flutterwave-react-v3": "^1.3.2",
     "framer-motion": "^12.23.24",
     "lucide-react": "^0.548.0",
     "next": "16.0.0",

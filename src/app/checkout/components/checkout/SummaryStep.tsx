@@ -1,22 +1,32 @@
 // CREATE THIS FILE AND PASTE THE CODE: components/checkout/SummaryStep.tsx
 "use client";
-import { useState } from "react";
+
+import { useEffect } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useCheckout } from "@/context/checkout-context";
 import { useCart } from "@/context/cart-context";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { FlutterWaveButton } from "flutterwave-react-v3";
-import { useMutation } from "@tanstack/react-query";
-import { createOrder } from "@/lib/PaymentApi"; // Ensure this path is correct
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
+
+// App-specific hooks and utilities
+import { useMutation } from "@tanstack/react-query";
+import { createOrder } from "@/lib/PaymentApi"; // Your existing function to create an order in the DB
+import {
+  useInitializePayment,
+  useVerifyPayment,
+} from "@/lib/flutterwave-queries"; // Ensure this path is correct
 
 export function SummaryStep() {
+  // --- Core Hooks ---
   const { checkoutData, goToPreviousStep } = useCheckout();
   const { cart, clearCart } = useCart();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
+  // --- Calculations ---
   const subtotal = cart.reduce(
     (sum, item) => sum + Number(item.price) * item.quantity,
     0
@@ -25,61 +35,121 @@ export function SummaryStep() {
     checkoutData.shippingInfo.state?.toLowerCase() === "lagos" ? 0 : 6000;
   const total = subtotal + shipping;
 
-  const [txRef] = useState(() => Date.now().toString());
-
-  const fwConfig = {
-    public_key: process.env.NEXT_PUBLIC_FLUTTERWAVE_PUBLIC_KEY!,
-    tx_ref: txRef,
-    amount: total,
-    currency: "NGN",
-    payment_options: "card,mobilemoney,ussd",
-    customer: {
-      email: checkoutData.customerInfo.email,
-      phone_number: checkoutData.customerInfo.phone,
-      name: checkoutData.customerInfo.name,
-    },
-    customizations: {
-      title: "Biscenic Furniture",
-      description: "Payment for items in cart",
-      logo: "https://your-logo-url.com/logo.png",
-    },
-  };
-
-  const { mutate, isPending } = useMutation({
+  // --- Payment & Order Mutations ---
+  const initializePaymentMutation = useInitializePayment();
+  const createOrderMutation = useMutation({
     mutationFn: createOrder,
     onSuccess: (data) => {
       toast.success("Order Placed Successfully!", {
         description: `Your order #${data.orderId} has been confirmed.`,
       });
       clearCart();
+      // Redirect to a success page to clear URL params and prevent re-triggering
       router.push(`/order-success?orderId=${data.orderId}`);
     },
     onError: (error) => {
-      toast.error("Failed to Place Order", { description: error.message });
+      toast.error("Failed to Save Order", {
+        description:
+          "Your payment was successful, but we failed to save the order. Please contact support.",
+      });
     },
   });
 
+  // --- Flutterwave Verification Flow ---
+  const tx_ref = searchParams.get("tx_ref");
+  const status = searchParams.get("status");
+
+  const {
+    data: verificationData,
+    isLoading: isVerifying,
+    isSuccess: isVerificationSuccess,
+    isError: isVerificationError,
+  } = useVerifyPayment(
+    tx_ref as string,
+    !!tx_ref && status === "successful" // Only run query if params are present and status is 'successful'
+  );
+
+  // EFFECT: Runs after successful payment verification to create the order
+  useEffect(() => {
+    if (isVerificationSuccess && verificationData) {
+      // The payment has been verified by our backend, now we can safely create the order.
+      const orderData = {
+        ...checkoutData,
+        items: cart.map((item) => ({ ...item, price: Number(item.price) })),
+        totalAmount: total,
+        paymentDetails: {
+          ...verificationData.data,
+          gateway: "flutterwave",
+        },
+        shippingInfo: {
+          ...checkoutData.shippingInfo,
+          postalCode: checkoutData.shippingInfo.zipCode || "",
+          country: checkoutData.shippingInfo.country || "",
+        },
+      };
+      createOrderMutation.mutate(orderData);
+    }
+    if (isVerificationError) {
+      toast.error("Payment Verification Failed", {
+        description:
+          "We could not confirm your payment. Please contact support if you were debited.",
+      });
+    }
+  }, [isVerificationSuccess, isVerificationError, verificationData]);
+
+  // --- Event Handlers ---
   const handlePlaceOrderCOD = () => {
     const orderData = {
       ...checkoutData,
-      items: cart.map((item) => ({
-        ...item,
-        price: Number(item.price),
-      })),
+      items: cart.map((item) => ({ ...item, price: Number(item.price) })),
       totalAmount: total,
+      paymentMethod: "cod" as "cod",
       shippingInfo: {
         ...checkoutData.shippingInfo,
         postalCode: checkoutData.shippingInfo.zipCode || "",
         country: checkoutData.shippingInfo.country || "",
       },
     };
-    mutate(orderData);
+    createOrderMutation.mutate(orderData);
   };
+
+  const handleFlutterwavePayment = () => {
+    initializePaymentMutation.mutate({
+      email: checkoutData.customerInfo.email,
+      amount: total,
+      currency: "NGN",
+      name: checkoutData.customerInfo.name,
+      phonenumber: checkoutData.customerInfo.phone,
+      gateway: "flutterwave",
+    });
+  };
+
+  // --- Loading State for Verification ---
+  if (isVerifying || createOrderMutation.isPending) {
+    return (
+      <div className="flex flex-col items-center justify-center space-y-4 py-12">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        <h2 className="text-2xl font-semibold">
+          {isVerifying
+            ? "Verifying your payment..."
+            : "Finalizing your order..."}
+        </h2>
+        <p className="text-muted-foreground">
+          Please do not close this window.
+        </p>
+      </div>
+    );
+  }
+
+  // --- Component JSX ---
+  const isProcessing =
+    initializePaymentMutation.isPending || createOrderMutation.isPending;
 
   return (
     <div className="space-y-8">
       <h2 className="text-2xl font-semibold">Order Summary & Confirmation</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {/* Customer & Shipping Details Cards (No Change) */}
         <div className="space-y-6">
           <Card>
             <CardHeader>
@@ -111,6 +181,8 @@ export function SummaryStep() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Order Totals Card (No Change) */}
         <Card className="h-fit">
           <CardHeader>
             <CardTitle>Order Totals</CardTitle>
@@ -143,58 +215,40 @@ export function SummaryStep() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Action Buttons */}
       <div className="flex justify-between pt-4">
         <Button
           type="button"
           variant="outline"
           onClick={goToPreviousStep}
-          disabled={isPending}
+          disabled={isProcessing}
         >
           Back to Payment
         </Button>
+
         {checkoutData.paymentMethod === "cod" ? (
           <Button
             type="button"
             onClick={handlePlaceOrderCOD}
-            disabled={isPending}
+            disabled={isProcessing}
           >
-            {isPending ? "Placing Order..." : "Place Order"}
+            {isProcessing ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : null}
+            Place Order
           </Button>
         ) : (
-          <FlutterWaveButton
-            {...fwConfig}
-            text={
-              isPending ? "Processing..." : `Pay ₦${total.toLocaleString()}`
-            }
-            className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
-            disabled={isPending}
-            callback={(response) => {
-              if (response.status === "successful") {
-                mutate({
-                  ...checkoutData,
-                  items: cart.map((item) => ({
-                    ...item,
-                    price: Number(item.price),
-                  })),
-                  totalAmount: total,
-                  paymentDetails: { ...response },
-                  shippingInfo: {
-                    ...checkoutData.shippingInfo,
-                    postalCode: checkoutData.shippingInfo.zipCode || "",
-                    country: checkoutData.shippingInfo.country || "",
-                  },
-                });
-              } else {
-                toast.error("Payment Not Completed", {
-                  description:
-                    "Your payment was not completed. Please try again.",
-                });
-              }
-            }}
-            onClose={() => {
-              toast.info("Payment modal closed.");
-            }}
-          />
+          <Button
+            type="button"
+            onClick={handleFlutterwavePayment}
+            disabled={isProcessing}
+          >
+            {isProcessing ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : null}
+            Pay ₦{total.toLocaleString()}
+          </Button>
         )}
       </div>
     </div>
