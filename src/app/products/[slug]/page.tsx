@@ -14,8 +14,9 @@ import { ModeToggle } from "@/components/mode-toggle";
 
 // Corrected imports for mock data and helpers
 import { useProduct } from "@/services/products/queries";
+// Note: Assuming ProductImage type now includes 'displayNameOverride?: string'
 import type { Product, ProductImage } from "@/app/types";
-import { productVariants, Variant } from "@/lib/product-variants";
+// DELETED: import { productVariants, Variant } from "@/lib/product-variants";
 import { ProductDetailSkeleton } from "@/app/products/ProductDetailSkeleton";
 import { convertToCartProduct, isOutOfStock } from "@/lib/product";
 
@@ -54,7 +55,21 @@ export default function ProductSlugPage() {
   const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentModalImageIndex, setCurrentModalImageIndex] = useState(0);
-  const [currentVariant, setCurrentVariant] = useState<Variant | null>(null);
+  // DELETED: const [currentVariant, setCurrentVariant] = useState<Variant | null>(null);
+
+  // --- NEW DERIVED STATE (EARLY) ---
+  const images = product?.images || [];
+  const [activeIndex, direction] = carouselState;
+  // Casting activeImage to allow access to the new property without a global type change in this file
+  const activeImage = (images[activeIndex] ?? images[0]) as ProductImage & {
+    displayNameOverride?: string;
+  };
+
+  const displayName = useMemo(() => {
+    // Check the active image for an override name, otherwise fall back to the base product name
+    return activeImage?.displayNameOverride || product?.name || "";
+  }, [product, activeImage]);
+  // --- END NEW DERIVED STATE ---
 
   const isBelysium = product?.name.includes("B'elysium");
   const defaultActiveTab = useMemo(
@@ -75,7 +90,7 @@ export default function ProductSlugPage() {
   >(null);
   const [currentPrice, setCurrentPrice] = useState<number | null>(null);
 
-  const displayName = currentVariant?.displayName || product?.name || "";
+  // DELETED: const displayName = currentVariant?.displayName || product?.name || "";
 
   const handleAddToCart = useCallback(() => {
     if (!product || currentPrice === null) return;
@@ -114,7 +129,7 @@ export default function ProductSlugPage() {
     addToCart,
     currentPrice,
     quantity,
-    displayName,
+    displayName, // 'displayName' is still used, but now calculated by useMemo
     selectedMaterial,
     selectedFinish,
   ]);
@@ -155,12 +170,15 @@ export default function ProductSlugPage() {
     }
   }, [product, selectedImageId]);
 
+  // DELETED: useEffect for setCurrentVariant (since currentVariant state is removed)
+  /*
   useEffect(() => {
     if (!product || !selectedImageId) return;
     const variants = productVariants[product.name] || [];
     const variant = variants.find((v) => v.imageId === selectedImageId) || null;
     setCurrentVariant(variant);
   }, [selectedImageId, product]);
+  */
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -188,9 +206,9 @@ export default function ProductSlugPage() {
   // =================================================================
   // SECTION 3: DERIVED STATE & RENDER LOGIC
   // =================================================================
-  const images = product.images || [];
-  const [activeIndex, direction] = carouselState;
-  const activeImage = images[activeIndex] ?? images[0];
+  // DELETED/MOVED: const images = product.images || []; (now defined early)
+  // DELETED/MOVED: const [activeIndex, direction] = carouselState; (now defined early)
+  // DELETED/MOVED: const activeImage = images[activeIndex] ?? images[0]; (now defined early)
   const isEclipsera = displayName.includes("Eclipsera");
   const isEirene = displayName.includes("Eirene");
   const isIvorySilence = displayName.includes("Ivory Silence");

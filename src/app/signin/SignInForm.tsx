@@ -1,6 +1,5 @@
 "use client";
 
-import { Suspense, useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -9,12 +8,10 @@ import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
-
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   Form,
   FormControl,
@@ -28,22 +25,14 @@ const formSchema = z.object({
   email: z.string().email(),
   password: z.string().min(1),
 });
-
 type SignInFormData = z.infer<typeof formSchema>;
 
-export default function SignInPage() {
+export default function SignInForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { setUser, setToken, isLoading: authLoading } = useAuth();
+  const { setUser, setToken } = useAuth();
 
-  const [loadingSkeleton, setLoadingSkeleton] = useState(true);
-  const fromParam = searchParams.get("from") || "/Dashboard";
-
-  useEffect(() => {
-    if (!authLoading) {
-      setLoadingSkeleton(false);
-    }
-  }, [authLoading]);
+  const fromParam = searchParams.get("from");
 
   const form = useForm<SignInFormData>({
     resolver: zodResolver(formSchema),
@@ -53,21 +42,38 @@ export default function SignInPage() {
   const { mutate, isPending } = useMutation({
     mutationFn: postSignIn,
     onSuccess: (data) => {
+      console.log("✅ FULL LOGIN RESPONSE:", data);
+
+      // Store token
       if (data.token) {
         localStorage.setItem("token", data.token);
         setToken(data.token);
       }
+
+      // Store user
       setUser(data.user);
 
       toast.success("Login Successful!", {
         description: "Welcome back. Redirecting...",
       });
 
-      router.push(fromParam);
+      // Role-based redirect
+      let redirectTo = "/Dashboard"; // Default for admins, managers, etc.
+
+      if (data.user?.role === "customer" || data.user?.role === "guest") {
+        redirectTo = "/collections"; // 👈 redirect to collections for normal users
+      }
+
+      // If ?from param exists, prioritize it
+      if (fromParam) {
+        redirectTo = fromParam;
+      }
+
+      router.push(redirectTo);
       router.refresh();
     },
     onError: (error: any) => {
-      console.error("Sign-in error:", error);
+      console.error("❌ Sign-in error:", error);
       toast.error("Login failed", {
         description:
           error?.response?.data?.message || "Something went wrong. Try again.",
@@ -77,40 +83,15 @@ export default function SignInPage() {
 
   const onSubmit = (values: SignInFormData) => mutate(values);
 
-  // Skeleton version while loading
-  if (loadingSkeleton) {
-    return (
-      <div className="lg:grid lg:min-h-screen lg:grid-cols-2 w-full">
-        {/* Left column skeleton */}
-        <div className="flex min-h-screen items-center justify-center py-12 px-4 bg-black lg:min-h-0">
-          <div className="mx-auto w-full max-w-sm space-y-6">
-            <Skeleton className="h-10 w-3/4 rounded-md" /> {/* title */}
-            <Skeleton className="h-5 w-full rounded-md" /> {/* description */}
-            <Skeleton className="h-10 w-full rounded-md" /> {/* email input */}
-            <Skeleton className="h-10 w-full rounded-md" />{" "}
-            {/* password input */}
-            <Skeleton className="h-10 w-full rounded-md" /> {/* button */}
-          </div>
-        </div>
-
-        {/* Right column skeleton */}
-        <div className="hidden lg:block relative">
-          <Skeleton className="h-full w-full" />
-        </div>
-      </div>
-    );
-  }
-
-  // Actual form content
   return (
-    <div className="lg:grid lg:min-h-screen lg:grid-cols-2 w-full">
-      {/* Left column */}
-      <div className="flex min-h-screen items-center justify-center py-12 px-4 bg-black text-white lg:min-h-0">
-        <div className="mx-auto w-full max-w-sm space-y-6">
-          <div className="space-y-2">
+    <div className="w-full lg:grid lg:min-h-screen lg:grid-cols-2">
+      {/* Left section */}
+      <div className="dark flex min-h-screen items-center justify-center py-12 px-4 bg-black text-white lg:min-h-0">
+        <div className="mx-auto grid w-full max-w-sm gap-6">
+          <div className="grid gap-2">
             <h1 className="text-3xl font-bold">Welcome back</h1>
-            <p className="text-muted-foreground">
-              Enter your email and password to sign in.
+            <p className="text-balance text-muted-foreground">
+              Enter your email to login.
             </p>
           </div>
 
@@ -134,19 +115,18 @@ export default function SignInPage() {
                   </FormItem>
                 )}
               />
-
               <FormField
                 control={form.control}
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center">
                       <Label>Password</Label>
                       <Link
                         href="/forgot-password"
-                        className="text-sm underline hover:text-gray-300"
+                        className="ml-auto inline-block text-sm underline hover:text-gray-300"
                       >
-                        Forgot password?
+                        Forgot your password?
                       </Link>
                     </div>
                     <FormControl>
@@ -161,7 +141,6 @@ export default function SignInPage() {
                   </FormItem>
                 )}
               />
-
               <Button
                 type="submit"
                 className="w-full bg-white text-black hover:bg-gray-200"
@@ -172,10 +151,10 @@ export default function SignInPage() {
             </form>
           </Form>
 
-          <div className="text-center text-sm">
+          <div className="mt-4 text-center text-sm">
             Don&apos;t have an account?{" "}
             <Link
-              href={`/signup?from=${fromParam}`}
+              href={`/signup?from=${fromParam || "/"}`}
               className="underline hover:text-gray-300"
             >
               Sign up
@@ -184,7 +163,7 @@ export default function SignInPage() {
         </div>
       </div>
 
-      {/* Right column */}
+      {/* Right section (Image) */}
       <div className="hidden bg-muted lg:block relative">
         <Image
           src="https://images.unsplash.com/photo-1592078615290-033ee584e267?q=80&w=2160&auto=format&fit=crop"
