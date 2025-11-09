@@ -34,7 +34,7 @@ const getInitials = (name?: string | null): string => {
 // --- FIXES END HERE ---
 
 const navLinks = [
-  { href: "/shop", label: "Shop" },
+  { href: "/collections", label: "Collections" },
   { href: "/about", label: "About" },
   { href: "/contact", label: "Contact" },
 ];

@@ -1,4 +1,4 @@
-// CREATE THIS FILE AND PASTE THE CODE: components/checkout/SummaryStep.tsx
+// components/checkout/SummaryStep.tsx
 "use client";
 
 import { useEffect } from "react";
@@ -11,31 +11,28 @@ import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
-// App-specific hooks and utilities
 import { useMutation } from "@tanstack/react-query";
-import { createOrder } from "@/lib/PaymentApi"; // Your existing function to create an order in the DB
+import { createOrder } from "@/lib/PaymentApi";
 import {
   useInitializePayment,
   useVerifyPayment,
-} from "@/lib/flutterwave-queries"; // Ensure this path is correct
+} from "@/lib/flutterwave-queries";
 
 export function SummaryStep() {
-  // --- Core Hooks ---
   const { checkoutData, goToPreviousStep } = useCheckout();
   const { cart, clearCart } = useCart();
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // --- Calculations ---
   const subtotal = cart.reduce(
     (sum, item) => sum + Number(item.price) * item.quantity,
     0
   );
-  const shipping =
-    checkoutData.shippingInfo.state?.toLowerCase() === "lagos" ? 0 : 6000;
-  const total = subtotal + shipping;
 
-  // --- Payment & Order Mutations ---
+  // Shipping details will be discussed - set as a constant text
+  const shippingText = "Details will be discussed";
+  const total = subtotal; // total is now simply the subtotal
+
   const initializePaymentMutation = useInitializePayment();
   const createOrderMutation = useMutation({
     mutationFn: createOrder,
@@ -44,10 +41,9 @@ export function SummaryStep() {
         description: `Your order #${data.orderId} has been confirmed.`,
       });
       clearCart();
-      // Redirect to a success page to clear URL params and prevent re-triggering
       router.push(`/order-success?orderId=${data.orderId}`);
     },
-    onError: (error) => {
+    onError: () => {
       toast.error("Failed to Save Order", {
         description:
           "Your payment was successful, but we failed to save the order. Please contact support.",
@@ -55,7 +51,6 @@ export function SummaryStep() {
     },
   });
 
-  // --- Flutterwave Verification Flow ---
   const tx_ref = searchParams.get("tx_ref");
   const status = searchParams.get("status");
 
@@ -64,15 +59,10 @@ export function SummaryStep() {
     isLoading: isVerifying,
     isSuccess: isVerificationSuccess,
     isError: isVerificationError,
-  } = useVerifyPayment(
-    tx_ref as string,
-    !!tx_ref && status === "successful" // Only run query if params are present and status is 'successful'
-  );
+  } = useVerifyPayment(tx_ref as string, !!tx_ref && status === "successful");
 
-  // EFFECT: Runs after successful payment verification to create the order
   useEffect(() => {
     if (isVerificationSuccess && verificationData) {
-      // The payment has been verified by our backend, now we can safely create the order.
       const orderData = {
         ...checkoutData,
         items: cart.map((item) => ({ ...item, price: Number(item.price) })),
@@ -82,9 +72,10 @@ export function SummaryStep() {
           gateway: "flutterwave",
         },
         shippingInfo: {
-          ...checkoutData.shippingInfo,
-          postalCode: checkoutData.shippingInfo.zipCode || "",
-          country: checkoutData.shippingInfo.country || "",
+          city: checkoutData.shippingInfo.city,
+          country: checkoutData.shippingInfo.country ?? "",
+          postalCode: checkoutData.shippingInfo.zipCode ?? "",
+          // Add other relevant fields if needed
         },
       };
       createOrderMutation.mutate(orderData);
@@ -95,9 +86,16 @@ export function SummaryStep() {
           "We could not confirm your payment. Please contact support if you were debited.",
       });
     }
-  }, [isVerificationSuccess, isVerificationError, verificationData]);
+  }, [
+    isVerificationSuccess,
+    isVerificationError,
+    verificationData,
+    checkoutData,
+    cart,
+    total,
+    createOrderMutation,
+  ]); // Added dependencies for clarity/correctness
 
-  // --- Event Handlers ---
   const handlePlaceOrderCOD = () => {
     const orderData = {
       ...checkoutData,
@@ -105,9 +103,10 @@ export function SummaryStep() {
       totalAmount: total,
       paymentMethod: "cod" as "cod",
       shippingInfo: {
-        ...checkoutData.shippingInfo,
-        postalCode: checkoutData.shippingInfo.zipCode || "",
-        country: checkoutData.shippingInfo.country || "",
+        city: checkoutData.shippingInfo.city,
+        country: checkoutData.shippingInfo.country ?? "",
+        postalCode: checkoutData.shippingInfo.zipCode ?? "",
+        // Add other relevant fields if needed
       },
     };
     createOrderMutation.mutate(orderData);
@@ -124,7 +123,6 @@ export function SummaryStep() {
     });
   };
 
-  // --- Loading State for Verification ---
   if (isVerifying || createOrderMutation.isPending) {
     return (
       <div className="flex flex-col items-center justify-center space-y-4 py-12">
@@ -141,7 +139,6 @@ export function SummaryStep() {
     );
   }
 
-  // --- Component JSX ---
   const isProcessing =
     initializePaymentMutation.isPending || createOrderMutation.isPending;
 
@@ -149,7 +146,6 @@ export function SummaryStep() {
     <div className="space-y-8">
       <h2 className="text-2xl font-semibold">Order Summary & Confirmation</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* Customer & Shipping Details Cards (No Change) */}
         <div className="space-y-6">
           <Card>
             <CardHeader>
@@ -178,11 +174,13 @@ export function SummaryStep() {
                 {checkoutData.shippingInfo.state}
               </p>
               <p>{checkoutData.shippingInfo.country}</p>
+              <p className="italic text-muted-foreground">
+                Shipping: {shippingText}
+              </p>
             </CardContent>
           </Card>
         </div>
 
-        {/* Order Totals Card (No Change) */}
         <Card className="h-fit">
           <CardHeader>
             <CardTitle>Order Totals</CardTitle>
@@ -194,8 +192,9 @@ export function SummaryStep() {
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Shipping</span>
-              <span>
-                {shipping === 0 ? "Free" : `₦${shipping.toLocaleString()}`}
+              {/* Display the text instead of a cost */}
+              <span className="font-medium text-foreground">
+                {shippingText}
               </span>
             </div>
             <Separator />
@@ -216,7 +215,6 @@ export function SummaryStep() {
         </Card>
       </div>
 
-      {/* Action Buttons */}
       <div className="flex justify-between pt-4">
         <Button
           type="button"

@@ -50,7 +50,7 @@ export const mockProductData: { [key: string]: Product } = {
   belysium: {
     _id: "product_belysium_002",
     name: "B'elysium", // Base name (e.g., if no variant is selected)
-    price: 2800000,
+    price: 20000,
     stock: 7,
     category: { name: "Bedroom" },
     images: [
@@ -93,7 +93,7 @@ export const mockProductData: { [key: string]: Product } = {
   lumivase: {
     _id: "product_lumivase_003",
     name: "Lumivase",
-    price: 850000,
+    price: 20000,
     stock: 25,
     category: { name: "Lighting & Decor" },
     images: [
