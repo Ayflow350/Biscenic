@@ -13,7 +13,7 @@ const slideImages = [
 
 export function HeroSection() {
   return (
-    <section className="relative flex flex-col items-center justify-center text-center text-neutral-800 dark:text-white overflow-hidden min-h-[100vh]">
+    <section className="relative flex flex-col items-center justify-center text-center text-neutral-800 dark:text-white overflow-hidden min-h-[100vh] sm:min-h-[90vh] md:min-h-[95vh] lg:min-h-[100vh]">
       {/* Slideshow Background */}
       <div className="absolute inset-0 z-[-2]">
         {slideImages.map((src, index) => (
@@ -32,15 +32,15 @@ export function HeroSection() {
       <div className="absolute inset-0 bg-white/30 dark:bg-black/60 z-[-1]" />
 
       {/* Hero Content */}
-      <div className="relative z-10 flex flex-col items-center justify-center px-4 sm:px-6 md:px-10 lg:px-20 text-center pt-24 md:pt-32">
-        <h1 className="font-serif text-black dark:text-white text-3xl sm:text-4xl md:text-6xl font-semibold leading-snug sm:leading-tight md:leading-tight mb-6">
+      <div className="relative z-10 flex flex-col items-center justify-center h-full px-4 sm:px-6 md:px-10 lg:px-20 text-center">
+        <h1 className="font-serif text-black dark:text-white text-3xl sm:text-4xl md:text-6xl font-semibold leading-snug sm:leading-tight md:leading-tight mb-6 drop-shadow-md">
           Beyond Living
         </h1>
 
         <Link href="/collections">
           <Button
             size="lg"
-            className="bg-[#be9e44] text-black hover:bg-[#d1b56a] font-semibold px-6 sm:px-8 py-4 sm:py-6 text-sm sm:text-base"
+            className="bg-[#be9e44] text-black hover:bg-[#d1b56a] font-semibold px-6 sm:px-8 py-4 sm:py-6 text-sm sm:text-base rounded-lg shadow-lg"
           >
             Explore Collections
           </Button>
@@ -65,10 +65,10 @@ export function HeroSection() {
           background-size: cover;
           opacity: 0;
           animation: fade 30s infinite;
-          transition: background-size 0.3s ease;
+          transition: all 0.5s ease;
         }
 
-        /* Parallax on Desktop */
+        /* Parallax for large screens */
         @media (min-width: 1024px) {
           .slide {
             background-attachment: fixed;
@@ -76,11 +76,16 @@ export function HeroSection() {
           }
         }
 
-        /* Full Image Visibility on Mobile */
+        /* Mobile — shorter height, maintain good coverage */
         @media (max-width: 768px) {
+          section {
+            min-height: 80vh; /* shorter hero height on mobile */
+          }
+
           .slide {
+            height: 70vh;
             background-size: contain;
-            background-color: #000;
+            background-position: center top; /* keep upper portion visible */
           }
         }
 

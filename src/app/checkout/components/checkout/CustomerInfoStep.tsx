@@ -68,21 +68,6 @@ export function CustomerInfoStep() {
         </p>
       </div>
 
-      {/* Optional: Add a Google login button */}
-      <Button variant="outline" className="w-full">
-        <GoogleIcon />
-        <span className="ml-2">Continue with Google</span>
-      </Button>
-
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center">
-          <Separator />
-        </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-background px-2 text-muted-foreground">OR</span>
-        </div>
-      </div>
-
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <FormField

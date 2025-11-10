@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import Select from "react-select";
+import Select, { StylesConfig } from "react-select";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -16,88 +16,141 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
-// --- ADDED: Import for the checkout flow ---
 import { useCheckout } from "@/context/checkout-context";
+import {
+  Country,
+  State,
+  City,
+  ICountry,
+  IState,
+  ICity,
+} from "country-state-city";
 
-// ---- Your types and data (unchanged) ----
-interface Country {
+interface FormCountry {
   code: string;
   name: string;
 }
-interface State {
+interface FormState {
   code: string;
   name: string;
-  countryCode: string;
 }
-interface City {
+interface FormCity {
   name: string;
-  stateCode: string;
-  countryCode: string;
 }
-const countries: Country[] = [
-  { code: "NG", name: "Nigeria" },
-  { code: "US", name: "United States" },
-  { code: "CA", name: "Canada" },
-];
-const states: State[] = [
-  { code: "LA", name: "Lagos", countryCode: "NG" },
-  { code: "FC", name: "Abuja", countryCode: "NG" },
-  { code: "CA", name: "California", countryCode: "US" },
-  { code: "ON", name: "Ontario", countryCode: "CA" },
-];
-const cities: City[] = [
-  { name: "Ikeja", stateCode: "LA", countryCode: "NG" },
-  { name: "Victoria Island", stateCode: "LA", countryCode: "NG" },
-  { name: "Toronto", stateCode: "ON", countryCode: "CA" },
-  { name: "Los Angeles", stateCode: "CA", countryCode: "US" },
-];
 
-// ---- Your Zod Schema (unchanged) ----
+const mapCountryToForm = (c: ICountry): FormCountry => ({
+  code: c.isoCode,
+  name: c.name,
+});
+const mapStateToForm = (s: IState): FormState => ({
+  code: s.isoCode,
+  name: s.name,
+});
+const mapCityToForm = (c: ICity): FormCity => ({ name: c.name });
+
+const allCountries: FormCountry[] =
+  Country.getAllCountries().map(mapCountryToForm);
+
 const countrySchema = z.object({
-  code: z.string().min(1, "Country code is required"),
-  name: z.string().min(1, "Country name is required"),
+  code: z.string().min(1),
+  name: z.string().min(1),
 });
 const stateSchema = z.object({
-  code: z.string().min(1, "State code is required"),
-  name: z.string().min(1, "State name is required"),
+  code: z.string().min(1),
+  name: z.string().min(1),
 });
-const citySchema = z.object({
-  name: z.string().min(1, "City name is required"),
-});
+const citySchema = z.object({ name: z.string().min(1) });
 const shippingSchema = z.object({
   country: countrySchema,
   state: stateSchema,
   city: citySchema,
-  address: z.string().min(5, "Please enter a valid street address"),
+  address: z.string().min(5),
   apartment: z.string().optional(),
   zipCode: z.string().optional(),
 });
 type ShippingFormData = z.infer<typeof shippingSchema>;
 
+// ✅ Custom React-Select styles (mobile-friendly)
+const selectStyles: StylesConfig<{ label: string; value: any }, false> = {
+  control: (styles, { isDisabled, isFocused }) => ({
+    ...styles,
+    backgroundColor: "white",
+    borderColor: isFocused ? "black" : "#d1d5db",
+    boxShadow: isFocused ? "0 0 0 1px black" : "none",
+    color: "black",
+    minHeight: "44px", // larger tap target
+    borderRadius: "8px",
+    pointerEvents: isDisabled ? "none" : "auto",
+    cursor: "pointer",
+    fontSize: "0.95rem",
+    "@media (max-width: 640px)": {
+      fontSize: "0.875rem",
+    },
+    "&:hover": { borderColor: "black" },
+  }),
+  singleValue: (styles) => ({ ...styles, color: "black" }),
+  placeholder: (styles) => ({ ...styles, color: "#6b7280" }),
+  menu: (styles) => ({
+    ...styles,
+    backgroundColor: "white",
+    zIndex: 50,
+    border: "1px solid black",
+  }),
+  option: (styles, { isSelected, isFocused }) => ({
+    ...styles,
+    backgroundColor: isSelected ? "black" : isFocused ? "#f3f4f6" : "white",
+    color: isSelected ? "white" : "black",
+    cursor: "pointer",
+  }),
+  dropdownIndicator: (styles) => ({
+    ...styles,
+    color: "black",
+    "&:hover": { color: "black" },
+  }),
+  clearIndicator: (styles) => ({
+    ...styles,
+    color: "black",
+    "&:hover": { color: "black" },
+  }),
+  indicatorSeparator: (styles) => ({
+    ...styles,
+    backgroundColor: "#e5e7eb",
+  }),
+};
+
 export function ShippingStep() {
-  // --- ADDED: Get checkout context functions ---
   const { checkoutData, updateCheckoutData, goToNextStep, goToPreviousStep } =
     useCheckout();
 
-  const [availableStates, setAvailableStates] = useState<State[]>([]);
-  const [availableCities, setAvailableCities] = useState<City[]>([]);
+  const [availableStates, setAvailableStates] = useState<FormState[]>([]);
+  const [availableCities, setAvailableCities] = useState<FormCity[]>([]);
+
+  const allStates = useMemo(() => State.getAllStates(), []);
+  const allCities = useMemo(() => City.getAllCities(), []);
 
   const form = useForm<ShippingFormData>({
     resolver: zodResolver(shippingSchema),
-    // This `defaultValues` line is the source of the TypeScript error,
-    // as `checkoutData.shippingInfo` may not match the form's expected shape.
-    // We are keeping it as is, per your request.
     defaultValues: checkoutData.shippingInfo
       ? {
-          country: countries.find(
+          country: allCountries.find(
             (c) => c.name === checkoutData.shippingInfo.country
           ) || { code: "", name: "" },
-          state: states.find(
+          state: allStates.find(
             (s) => s.name === checkoutData.shippingInfo.state
-          ) || { code: "", name: "" },
-          city: cities.find(
-            (c) => c.name === checkoutData.shippingInfo.city
-          ) || { name: "" },
+          )
+            ? mapStateToForm(
+                allStates.find(
+                  (s) => s.name === checkoutData.shippingInfo.state
+                )!
+              )
+            : { code: "", name: "" },
+          city: allCities.find((c) => c.name === checkoutData.shippingInfo.city)
+            ? mapCityToForm(
+                allCities.find(
+                  (c) => c.name === checkoutData.shippingInfo.city
+                )!
+              )
+            : { name: "" },
           address: checkoutData.shippingInfo.address || "",
           apartment: checkoutData.shippingInfo.apartment || "",
           zipCode: checkoutData.shippingInfo.zipCode || "",
@@ -112,49 +165,57 @@ export function ShippingStep() {
         },
   });
 
-  // Your dependent dropdown logic (unchanged)
   const selectedCountry = form.watch("country");
   const selectedState = form.watch("state");
+
   useEffect(() => {
     if (selectedCountry?.code) {
-      const filteredStates = states.filter(
-        (s) => s.countryCode === selectedCountry.code
+      const filteredStates = State.getStatesOfCountry(selectedCountry.code).map(
+        mapStateToForm
       );
       setAvailableStates(filteredStates);
       form.setValue("state", { code: "", name: "" });
       form.setValue("city", { name: "" });
       setAvailableCities([]);
+    } else {
+      setAvailableStates([]);
+      setAvailableCities([]);
     }
   }, [selectedCountry, form]);
+
   useEffect(() => {
-    if (selectedState?.code) {
-      const filteredCities = cities.filter(
-        (c) => c.stateCode === selectedState.code
-      );
+    if (selectedState?.code && selectedCountry?.code) {
+      const filteredCities = City.getCitiesOfState(
+        selectedCountry.code,
+        selectedState.code
+      ).map(mapCityToForm);
       setAvailableCities(filteredCities);
       form.setValue("city", { name: "" });
+    } else {
+      setAvailableCities([]);
     }
-  }, [selectedState, form]);
+  }, [selectedState, selectedCountry, form]);
 
-  // --- MODIFIED: Connect onSubmit to the checkout flow ---
   const onSubmit = (data: ShippingFormData) => {
-    console.log("✅ Submitted data:", data);
     updateCheckoutData({
       shippingInfo: {
         address: data.address,
-        city: data.city.name,
+        country: data.country.name,
         state: data.state.name,
+        city: data.city.name,
         apartment: data.apartment,
         zipCode: data.zipCode,
       },
-    }); // Save data to the global context
-    goToNextStep(); // Go to the 'Payment' step
+    });
+    goToNextStep();
   };
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h2 className="text-2xl font-semibold">Shipping Information</h2>
+    <div className="space-y-6 sm:space-y-8 max-w-2xl mx-auto px-4 sm:px-0">
+      <div className="text-center sm:text-left">
+        <h2 className="text-xl sm:text-2xl font-semibold">
+          Shipping Information
+        </h2>
         <p className="text-muted-foreground text-sm mt-1">
           Enter your shipping details below.
         </p>
@@ -163,62 +224,66 @@ export function ShippingStep() {
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(onSubmit)}
-          className="space-y-6"
+          className="space-y-5 sm:space-y-6"
           noValidate
         >
-          {/* All your FormField components remain exactly the same */}
-          <FormField
-            control={form.control}
-            name="country"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Country</FormLabel>
-                <Select
-                  options={countries.map((c) => ({
-                    label: c.name,
-                    value: c,
-                  }))}
-                  value={
-                    field.value?.code
-                      ? { label: field.value.name, value: field.value }
-                      : null
-                  }
-                  onChange={(option) => field.onChange(option?.value)}
-                  placeholder="Select Country"
-                />
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          {/* Responsive Grid for Selects */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="country"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Country</FormLabel>
+                  <Select
+                    options={allCountries.map((c) => ({
+                      label: c.name,
+                      value: c,
+                    }))}
+                    value={
+                      field.value?.code
+                        ? { label: field.value.name, value: field.value }
+                        : null
+                    }
+                    onChange={(option) => field.onChange(option?.value)}
+                    placeholder="Select Country"
+                    styles={selectStyles}
+                  />
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-          <FormField
-            control={form.control}
-            name="state"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>State / Province</FormLabel>
-                <Select
-                  options={availableStates.map((s) => ({
-                    label: s.name,
-                    value: s,
-                  }))}
-                  value={
-                    field.value?.code
-                      ? { label: field.value.name, value: field.value }
-                      : null
-                  }
-                  onChange={(option) => field.onChange(option?.value)}
-                  placeholder={
-                    availableStates.length
-                      ? "Select State"
-                      : "Select a country first"
-                  }
-                  isDisabled={!availableStates.length}
-                />
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+            <FormField
+              control={form.control}
+              name="state"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>State / Province</FormLabel>
+                  <Select
+                    options={availableStates.map((s) => ({
+                      label: s.name,
+                      value: s,
+                    }))}
+                    value={
+                      field.value?.code
+                        ? { label: field.value.name, value: field.value }
+                        : null
+                    }
+                    onChange={(option) => field.onChange(option?.value)}
+                    placeholder={
+                      availableStates.length
+                        ? "Select State"
+                        : "Select a country first"
+                    }
+                    isDisabled={!availableStates.length}
+                    styles={selectStyles}
+                  />
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
 
           <FormField
             control={form.control}
@@ -243,6 +308,7 @@ export function ShippingStep() {
                       : "Select a state first"
                   }
                   isDisabled={!availableCities.length}
+                  styles={selectStyles}
                 />
                 <FormMessage />
               </FormItem>
@@ -257,7 +323,7 @@ export function ShippingStep() {
                 <FormLabel>Street Address</FormLabel>
                 <Textarea
                   placeholder="123 Main Street"
-                  className="resize-none"
+                  className="resize-none min-h-[80px]"
                   {...field}
                 />
                 <FormMessage />
@@ -265,36 +331,45 @@ export function ShippingStep() {
             )}
           />
 
-          <FormField
-            control={form.control}
-            name="apartment"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Apartment, suite, etc. (Optional)</FormLabel>
-                <Input placeholder="Apt #4B" {...field} />
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="apartment"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Apartment / Suite (Optional)</FormLabel>
+                  <Input placeholder="Apt #4B" {...field} />
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-          <FormField
-            control={form.control}
-            name="zipCode"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>ZIP / Postal Code (Optional)</FormLabel>
-                <Input placeholder="Enter postal code" {...field} />
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+            <FormField
+              control={form.control}
+              name="zipCode"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>ZIP / Postal Code</FormLabel>
+                  <Input placeholder="Enter postal code" {...field} />
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
 
-          {/* --- ADDED: Navigation buttons --- */}
-          <div className="flex justify-between pt-4">
-            <Button type="button" variant="outline" onClick={goToPreviousStep}>
+          {/* Buttons - stack on mobile */}
+          <div className="flex flex-col sm:flex-row justify-between gap-3 pt-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={goToPreviousStep}
+              className="w-full sm:w-auto"
+            >
               Back to Customer Info
             </Button>
-            <Button type="submit">Continue to Payment</Button>
+            <Button type="submit" className="w-full sm:w-auto">
+              Continue to Payment
+            </Button>
           </div>
         </form>
       </Form>

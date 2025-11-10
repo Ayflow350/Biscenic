@@ -1,4 +1,3 @@
-// components/checkout/SummaryStep.tsx
 "use client";
 
 import { useEffect } from "react";
@@ -10,7 +9,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
-
 import { useMutation } from "@tanstack/react-query";
 import { createOrder } from "@/lib/PaymentApi";
 import {
@@ -29,9 +27,8 @@ export function SummaryStep() {
     0
   );
 
-  // Shipping details will be discussed - set as a constant text
   const shippingText = "Details will be discussed";
-  const total = subtotal; // total is now simply the subtotal
+  const total = subtotal;
 
   const initializePaymentMutation = useInitializePayment();
   const createOrderMutation = useMutation({
@@ -75,7 +72,6 @@ export function SummaryStep() {
           city: checkoutData.shippingInfo.city,
           country: checkoutData.shippingInfo.country ?? "",
           postalCode: checkoutData.shippingInfo.zipCode ?? "",
-          // Add other relevant fields if needed
         },
       };
       createOrderMutation.mutate(orderData);
@@ -94,7 +90,7 @@ export function SummaryStep() {
     cart,
     total,
     createOrderMutation,
-  ]); // Added dependencies for clarity/correctness
+  ]);
 
   const handlePlaceOrderCOD = () => {
     const orderData = {
@@ -106,7 +102,6 @@ export function SummaryStep() {
         city: checkoutData.shippingInfo.city,
         country: checkoutData.shippingInfo.country ?? "",
         postalCode: checkoutData.shippingInfo.zipCode ?? "",
-        // Add other relevant fields if needed
       },
     };
     createOrderMutation.mutate(orderData);
@@ -125,7 +120,7 @@ export function SummaryStep() {
 
   if (isVerifying || createOrderMutation.isPending) {
     return (
-      <div className="flex flex-col items-center justify-center space-y-4 py-12">
+      <div className="flex flex-col items-center justify-center space-y-4 py-12 px-4 text-center">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
         <h2 className="text-2xl font-semibold">
           {isVerifying
@@ -143,9 +138,14 @@ export function SummaryStep() {
     initializePaymentMutation.isPending || createOrderMutation.isPending;
 
   return (
-    <div className="space-y-8">
-      <h2 className="text-2xl font-semibold">Order Summary & Confirmation</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+    <div className="space-y-8 px-4 sm:px-6 md:px-8">
+      <h2 className="text-2xl font-semibold text-center md:text-left">
+        Order Summary & Confirmation
+      </h2>
+
+      {/* Responsive grid layout */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+        {/* Left side */}
         <div className="space-y-6">
           <Card>
             <CardHeader>
@@ -163,6 +163,7 @@ export function SummaryStep() {
               </p>
             </CardContent>
           </Card>
+
           <Card>
             <CardHeader>
               <CardTitle>Shipping Address</CardTitle>
@@ -181,6 +182,7 @@ export function SummaryStep() {
           </Card>
         </div>
 
+        {/* Right side */}
         <Card className="h-fit">
           <CardHeader>
             <CardTitle>Order Totals</CardTitle>
@@ -190,19 +192,23 @@ export function SummaryStep() {
               <span className="text-muted-foreground">Subtotal</span>
               <span>₦{subtotal.toLocaleString()}</span>
             </div>
+
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Shipping</span>
-              {/* Display the text instead of a cost */}
               <span className="font-medium text-foreground">
                 {shippingText}
               </span>
             </div>
+
             <Separator />
+
             <div className="flex justify-between font-semibold text-lg">
               <span>Total</span>
               <span>₦{total.toLocaleString()}</span>
             </div>
+
             <Separator />
+
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Payment Method</span>
               <span className="font-medium capitalize">
@@ -215,12 +221,14 @@ export function SummaryStep() {
         </Card>
       </div>
 
-      <div className="flex justify-between pt-4">
+      {/* Action buttons */}
+      <div className="flex flex-col sm:flex-row justify-between gap-4 pt-4">
         <Button
           type="button"
           variant="outline"
           onClick={goToPreviousStep}
           disabled={isProcessing}
+          className="w-full sm:w-auto"
         >
           Back to Payment
         </Button>
@@ -230,10 +238,9 @@ export function SummaryStep() {
             type="button"
             onClick={handlePlaceOrderCOD}
             disabled={isProcessing}
+            className="w-full sm:w-auto"
           >
-            {isProcessing ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : null}
+            {isProcessing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Place Order
           </Button>
         ) : (
@@ -241,10 +248,9 @@ export function SummaryStep() {
             type="button"
             onClick={handleFlutterwavePayment}
             disabled={isProcessing}
+            className="w-full sm:w-auto"
           >
-            {isProcessing ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : null}
+            {isProcessing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Pay ₦{total.toLocaleString()}
           </Button>
         )}
