@@ -2,28 +2,30 @@
 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { Menu, ShoppingBag } from "lucide-react";
 import { ModeToggle } from "./mode-toggle";
-import { useCart } from "@/context/cart-context"; // Ensure this path is correct
+import { useCart } from "@/context/cart-context";
 import Image from "next/image";
+import { useState } from "react"; // <--- IMPORT useState
+import { useRouter } from "next/navigation"; // <--- IMPORT useRouter
 
 // --- FIXES START HERE ---
 
-// 1. Import the necessary Avatar components from Shadcn UI
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-
-// 2. Import the necessary hooks and components for authentication
 import { useAuth } from "@/context/AuthContext";
 import { UserNav } from "@/components/user-nav";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CartDrawerContent } from "./CartSidebar";
+import { CartDrawerContent } from "../components/CartSidebar"; // Assuming CartDrawerContent is correct
 
-// 3. Define the helper function locally or import it if you moved it to a utils file
-// ADJUSTED: Changed type to be more defensive (name?: string | null)
-// and added an early exit to handle undefined/null/empty string inputs.
 const getInitials = (name?: string | null): string => {
-  if (!name) return "U"; // Return 'U' for undefined, null, or empty string
+  if (!name) return "U";
 
   const names = name.split(" ").filter(Boolean);
   if (names.length === 0) return "U";
@@ -42,6 +44,29 @@ const navLinks = [
 export function Header() {
   const { itemCount } = useCart();
   const { user, isLoading, logout } = useAuth();
+  const router = useRouter(); // <--- Initialize router
+
+  // 1. Add state to control the Cart Sheet
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  // 1b. Add state to control the Mobile Menu Sheet
+  const [isMenuOpen, setIsMenuOpen] = useState(false); // <--- NEW STATE
+
+  // 2. Function to close the menu and navigate
+  const handleMobileNavLinkClick = (href: string) => {
+    setIsMenuOpen(false); // Close the menu sheet
+    // Use a small delay for smoother transition if the sheet has an animation
+    setTimeout(() => {
+      router.push(href);
+    }, 150);
+  };
+
+  // 3. Helper function for auth links to close menu before routing
+  const handleAuthLinkClick = (href: string) => {
+    setIsMenuOpen(false); // Close the menu sheet
+    setTimeout(() => {
+      // Use Link directly for non-page-transition links, but the Sheet must close first
+    }, 150);
+  };
 
   return (
     <header className="sticky top-0 left-0 w-full flex items-center justify-between p-4 md:px-8 z-50 bg-background/80 backdrop-blur-sm border-b">
@@ -77,7 +102,7 @@ export function Header() {
         {/* Desktop Authentication Section (Dynamic) */}
         <div className="hidden md:flex items-center gap-2">
           {isLoading ? (
-            <Skeleton className="h-10 w-24 rounded-md" /> // Adjusted width for better look
+            <Skeleton className="h-10 w-24 rounded-md" />
           ) : user ? (
             <UserNav />
           ) : (
@@ -93,9 +118,8 @@ export function Header() {
           <ModeToggle />
         </div>
 
-        {/* Cart Icon */}
-        {/* CART DRAWER */}
-        <Sheet>
+        {/* Cart Icon - CART DRAWER */}
+        <Sheet open={isCartOpen} onOpenChange={setIsCartOpen}>
           <SheetTrigger asChild>
             <button className="relative p-2">
               <ShoppingBag className="h-6 w-6 text-muted-foreground hover:text-foreground transition-colors" />
@@ -108,17 +132,21 @@ export function Header() {
             </button>
           </SheetTrigger>
 
-          <SheetContent side="right" className="w-[380px] p-6">
-            <h2 className="text-xl font-semibold mb-4">Your Cart</h2>
+          <SheetContent side="right" className="w-[380px] p-6 flex flex-col">
+            <SheetHeader>
+              <SheetTitle className="text-xl font-semibold">
+                Your Cart
+              </SheetTitle>
+            </SheetHeader>
 
-            {/* ✅ Cart Items */}
-            <CartDrawerContent />
+            <CartDrawerContent onClose={() => setIsCartOpen(false)} />
           </SheetContent>
         </Sheet>
 
         {/* Mobile Menu Trigger (Hamburger Icon) */}
         <div className="md:hidden">
-          <Sheet>
+          {/* 4. Use the isMenuOpen state */}
+          <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon">
                 <Menu className="h-6 w-6" />
@@ -129,13 +157,14 @@ export function Header() {
               <div className="p-4 mt-8 flex flex-col h-full">
                 <nav className="flex flex-col gap-6 text-lg">
                   {navLinks.map((link) => (
-                    <Link
+                    // 5. Change Link to Button/div with custom onClick handler
+                    <div
                       key={link.href}
-                      href={link.href}
-                      className="text-muted-foreground hover:text-foreground transition-colors"
+                      onClick={() => handleMobileNavLinkClick(link.href)}
+                      className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                     >
                       {link.label}
-                    </Link>
+                    </div>
                   ))}
                 </nav>
 
@@ -146,25 +175,37 @@ export function Header() {
                   ) : user ? (
                     <div className="flex items-center justify-between border-t pt-4">
                       <div className="flex items-center gap-2">
-                        {/* This code will now work because Avatar is imported */}
                         <Avatar className="h-9 w-9 border">
                           <AvatarFallback>
-                            {/* The call is now safe because getInitials handles null/undefined */}
                             {getInitials(user.name)}
                           </AvatarFallback>
                         </Avatar>
                         <span className="text-sm font-medium">{user.name}</span>
                       </div>
-                      <Button variant="outline" onClick={logout}>
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          setIsMenuOpen(false); // Close before logout
+                          logout();
+                        }}
+                      >
                         Logout
                       </Button>
                     </div>
                   ) : (
                     <div className="grid gap-2 border-t pt-4">
-                      <Button asChild>
+                      {/* 6. Update Sign Up/In to close the sheet first */}
+                      <Button
+                        asChild
+                        onClick={() => handleAuthLinkClick("/signup")}
+                      >
                         <Link href="/signup">Sign Up</Link>
                       </Button>
-                      <Button asChild variant="outline">
+                      <Button
+                        asChild
+                        variant="outline"
+                        onClick={() => handleAuthLinkClick("/signin")}
+                      >
                         <Link href="/signin">Sign In</Link>
                       </Button>
                     </div>

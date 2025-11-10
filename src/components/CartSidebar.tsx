@@ -4,7 +4,13 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 
-export function CartDrawerContent() {
+// 1. Define Props with an onClose function
+interface CartDrawerContentProps {
+  onClose: () => void;
+}
+
+// 2. Accept the onClose prop
+export function CartDrawerContent({ onClose }: CartDrawerContentProps) {
   const { cart, removeFromCart, updateQuantity } = useCart();
   const router = useRouter();
 
@@ -16,8 +22,10 @@ export function CartDrawerContent() {
     0
   );
 
+  // 3. Update handleCheckout to close the drawer BEFORE routing
   const handleCheckout = () => {
-    router.push("/checkout");
+    onClose(); // Close the drawer first
+    router.push("/checkout"); // Then navigate
   };
 
   return (
