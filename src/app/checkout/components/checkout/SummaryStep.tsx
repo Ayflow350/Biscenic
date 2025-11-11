@@ -149,7 +149,9 @@ export function SummaryStep() {
         toast.success("Order Placed Successfully!", {
           description: `Your order #${data.orderId} has been confirmed.`,
         });
-        router.push(`/order-success?orderId=${data.orderId}`);
+        router.push(
+          `https://biscenic-leun.vercel.app/order-success?orderId=${data.orderId}`
+        );
       },
       onError: (error) => {
         console.error("COD order save failed:", error);
@@ -157,7 +159,7 @@ export function SummaryStep() {
           description:
             "There was an issue saving your COD order. Please try again.",
         });
-        router.push(`/order-error`);
+        router.push(`https://biscenic-leun.vercel.app/order-error`);
       },
     });
   };

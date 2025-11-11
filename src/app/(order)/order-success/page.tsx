@@ -84,7 +84,7 @@ const useOrderCreationMutation = (
           "Payment successful, but order save failed. Contact support.",
       });
       // Route to error page on backend write failure
-      router.replace("/order-error");
+      router.replace("https://biscenic-leun.vercel.app/order-error");
     },
   });
 };
