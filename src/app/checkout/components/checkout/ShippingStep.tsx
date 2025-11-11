@@ -70,51 +70,76 @@ const shippingSchema = z.object({
 });
 type ShippingFormData = z.infer<typeof shippingSchema>;
 
-// ✅ Custom React-Select styles (mobile-friendly)
+// ✅ UPDATED Custom React-Select styles for Dark/Light Mode
 const selectStyles: StylesConfig<{ label: string; value: any }, false> = {
+  // Container for the entire component
   control: (styles, { isDisabled, isFocused }) => ({
     ...styles,
-    backgroundColor: "white",
-    borderColor: isFocused ? "black" : "#d1d5db",
-    boxShadow: isFocused ? "0 0 0 1px black" : "none",
-    color: "black",
-    minHeight: "44px", // larger tap target
-    borderRadius: "8px",
+    // Use theme colors for background and border
+    backgroundColor: "var(--background)",
+    borderColor: isFocused ? "var(--input)" : "var(--border)",
+    boxShadow: isFocused ? "0 0 0 2px var(--ring)" : "none", // Use ring for focus shadow
+    color: "var(--foreground)",
+    minHeight: "44px",
+    borderRadius: "6px", // Changed to 6px to match Input/Textarea's rounded-md
     pointerEvents: isDisabled ? "none" : "auto",
     cursor: "pointer",
     fontSize: "0.95rem",
     "@media (max-width: 640px)": {
       fontSize: "0.875rem",
     },
-    "&:hover": { borderColor: "black" },
+    "&:hover": { borderColor: isFocused ? "var(--ring)" : "var(--input)" },
   }),
-  singleValue: (styles) => ({ ...styles, color: "black" }),
-  placeholder: (styles) => ({ ...styles, color: "#6b7280" }),
+
+  // Text inside the control
+  singleValue: (styles) => ({
+    ...styles,
+    color: "var(--foreground)", // Text flips color
+  }),
+
+  // Placeholder text
+  placeholder: (styles) => ({
+    ...styles,
+    color: "var(--muted-foreground)", // Placeholder text flips color
+  }),
+
+  // The dropdown menu itself
   menu: (styles) => ({
     ...styles,
-    backgroundColor: "white",
+    backgroundColor: "var(--popover)", // Use popover color for menus
+    border: "1px solid var(--border)",
+    boxShadow: "var(--shadow)",
     zIndex: 50,
-    border: "1px solid black",
   }),
-  option: (styles, { isSelected, isFocused }) => ({
-    ...styles,
-    backgroundColor: isSelected ? "black" : isFocused ? "#f3f4f6" : "white",
-    color: isSelected ? "white" : "black",
-    cursor: "pointer",
-  }),
+
+  // Individual options
+  option: (styles, { isSelected, isFocused }) => {
+    return {
+      ...styles,
+      backgroundColor: isSelected
+        ? "var(--primary)"
+        : isFocused
+        ? "var(--accent)" // Light hover/Dark hover
+        : "var(--popover)",
+      color: isSelected ? "var(--primary-foreground)" : "var(--foreground)", // Text color flips
+      cursor: "pointer",
+      "&:active": {
+        backgroundColor: "var(--primary)",
+      },
+    };
+  },
+
+  // Dropdown indicator (arrow)
   dropdownIndicator: (styles) => ({
     ...styles,
-    color: "black",
-    "&:hover": { color: "black" },
+    color: "var(--muted-foreground)",
+    "&:hover": { color: "var(--foreground)" },
   }),
-  clearIndicator: (styles) => ({
-    ...styles,
-    color: "black",
-    "&:hover": { color: "black" },
-  }),
+
+  // Separator
   indicatorSeparator: (styles) => ({
     ...styles,
-    backgroundColor: "#e5e7eb",
+    backgroundColor: "var(--border)",
   }),
 };
 
@@ -338,6 +363,7 @@ export function ShippingStep() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Apartment / Suite (Optional)</FormLabel>
+                  {/* These Input/Textarea components must handle dark mode correctly */}
                   <Input placeholder="Apt #4B" {...field} />
                   <FormMessage />
                 </FormItem>
@@ -350,6 +376,7 @@ export function ShippingStep() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>ZIP / Postal Code</FormLabel>
+                  {/* These Input/Textarea components must handle dark mode correctly */}
                   <Input placeholder="Enter postal code" {...field} />
                   <FormMessage />
                 </FormItem>

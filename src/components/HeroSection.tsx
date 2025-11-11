@@ -4,22 +4,21 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
 const topImages = [
+  "/hero-slides/lumivase/1.PNG", // mobile only
   "/hero-slides/115.PNG",
   "/hero-slides/111.png",
   "/hero-slides/112.png",
 ];
-const bottomImages = [
-  "/hero-slides/lumivase/1.PNG",
-  "/hero-slides/lumivase/2.png",
-  "/hero-slides/lumivase/3.png",
-];
 
 export function HeroSection() {
+  // Slice the array to skip the first image for desktop slideshow
+  const desktopImages = topImages.slice(1);
+
   return (
-    <section className="relative h-[100vh] w-full flex flex-col items-center justify-center text-center text-neutral-800 dark:text-white overflow-hidden">
-      {/* === DESKTOP SLIDESHOW (Top images only) === */}
+    <section className="relative h-[100vh] w-full flex flex-col items-center justify-center text-center text-white dark:text-white overflow-hidden">
+      {/* === DESKTOP SLIDESHOW (skip first image) === */}
       <div className="absolute inset-0 z-[-2] hidden sm:block">
-        {topImages.map((src, index) => (
+        {desktopImages.map((src, index) => (
           <div
             key={src}
             className="slide bg-center bg-cover absolute inset-0 opacity-0"
@@ -31,43 +30,18 @@ export function HeroSection() {
         ))}
       </div>
 
-      {/* === MOBILE DOUBLE SLIDESHOW === */}
-      <div className="absolute inset-0 z-[-2] flex flex-col sm:hidden">
-        {/* Top half */}
-        <div className="relative w-full h-1/2 overflow-hidden">
-          {topImages.map((src, index) => (
-            <div
-              key={`top-${index}`}
-              className="top-slide absolute inset-0 bg-center bg-cover opacity-0"
-              style={{
-                backgroundImage: `url(${src})`,
-                animationDelay: `${index * 8}s`, // slower top sequence
-              }}
-            />
-          ))}
-        </div>
-
-        {/* Bottom half (only mobile) */}
-        <div className="relative w-full h-1/2 overflow-hidden">
-          {bottomImages.map((src, index) => (
-            <div
-              key={`bottom-${index}`}
-              className="bottom-slide absolute inset-0 bg-center bg-cover opacity-0"
-              style={{
-                backgroundImage: `url(${src})`,
-                animationDelay: `${index * 8 + 4}s`, // 4s offset for staggered transition
-              }}
-            />
-          ))}
-        </div>
-      </div>
+      {/* === MOBILE SINGLE IMAGE === */}
+      <div
+        className="absolute inset-0 z-[-2] sm:hidden bg-center bg-cover"
+        style={{ backgroundImage: `url(${topImages[0]})` }} // mobile first image
+      />
 
       {/* === Overlay === */}
-      <div className="absolute inset-0 bg-white/30 dark:bg-black/60 z-[-1]" />
+      <div className="absolute inset-0 bg-black/60 dark:bg-black/60 z-[-1]" />
 
       {/* === Hero Content === */}
       <div className="z-10 px-4">
-        <h1 className="font-serif text-black dark:text-white text-3xl sm:text-6xl font-semibold leading-tight mb-6">
+        <h1 className="font-serif text-white dark:text-white text-3xl sm:text-6xl font-semibold leading-tight mb-6">
           Beyond Living
         </h1>
         <Link href="/collections">
@@ -87,9 +61,7 @@ export function HeroSection() {
 
       {/* === Animation Styles === */}
       <style jsx>{`
-        .slide,
-        .top-slide,
-        .bottom-slide {
+        .slide {
           animation: fade 24s infinite ease-in-out;
         }
 
