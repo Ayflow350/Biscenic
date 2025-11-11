@@ -41,13 +41,13 @@ export function HeroSection() {
 
       {/* === Hero Content === */}
       <div className="z-10 px-4">
-        <h1 className="font-serif text-white dark:text-white text-3xl sm:text-6xl font-semibold leading-tight mb-6">
+        <h1 className="font-serif text- dark:text-white text-3xl sm:text-6xl font-semibold leading-tight mb-6">
           Beyond Living
         </h1>
         <Link href="/collections">
           <Button
             size="lg"
-            className="bg-black/70 hover:bg-black/90 text-white font-medium px-8 py-6 text-sm tracking-wide rounded-md transition-colors"
+            className="bg-[#a1823d] text-black font-semibold px-8 py-6 text-sm active:bg-[#be9e44] transition-colors duration-150"
           >
             Explore Collections
           </Button>
