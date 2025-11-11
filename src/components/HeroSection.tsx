@@ -47,7 +47,7 @@ export function HeroSection() {
         <Link href="/collections">
           <Button
             size="lg"
-            className="bg-[#be9e44] text-black hover:bg-[#d1b56a] font-semibold px-8 py-6 text-sm"
+            className="bg-black/70 hover:bg-black/90 text-white font-medium px-8 py-6 text-sm tracking-wide rounded-md transition-colors"
           >
             Explore Collections
           </Button>

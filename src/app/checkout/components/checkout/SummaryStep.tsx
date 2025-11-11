@@ -22,15 +22,10 @@ export function SummaryStep() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // 🚨 CONSOLE LOG: Show the context data that is used for rendering and the payload
-  console.log("Current Checkout Data:", checkoutData);
-  console.log("Current Cart:", cart);
-
   const subtotal = cart.reduce(
     (sum, item) => sum + Number(item.price) * item.quantity,
     0
   );
-
   const shippingText = "Details will be discussed";
   const total = subtotal;
 
@@ -41,7 +36,6 @@ export function SummaryStep() {
       toast.success("Order Placed Successfully!", {
         description: `Your order #${data.orderId} has been confirmed.`,
       });
-      // REMOVE clearCart() here.
       router.push(`/order-success?orderId=${data.orderId}`);
     },
     onError: (error) => {
@@ -67,9 +61,7 @@ export function SummaryStep() {
   useEffect(() => {
     if (isVerificationSuccess && verificationData) {
       const orderData = {
-        // 🚨 CRITICAL FIX: Explicitly include customerInfo
         customerInfo: checkoutData.customerInfo,
-
         items: cart.map((item) => ({
           id: item.id,
           name: item.name,
@@ -81,7 +73,6 @@ export function SummaryStep() {
           ...verificationData.data,
           gateway: "flutterwave",
         },
-        // 🚨 FIX IMPLEMENTED: Ensure required fields are present
         shippingInfo: {
           address: checkoutData.shippingInfo.address,
           state: checkoutData.shippingInfo.state,
@@ -90,11 +81,8 @@ export function SummaryStep() {
           postalCode: checkoutData.shippingInfo.zipCode ?? "",
           apartment: checkoutData.shippingInfo.apartment ?? "",
         },
-        paymentMethod: "flutterwave" as const, // <-- Explicitly included
+        paymentMethod: "flutterwave" as const,
       };
-
-      // 🚨 CONSOLE LOG: Show the payload that is about to be sent
-      console.log("Sending Order Data (Flutterwave):", orderData);
 
       createOrderMutation.mutate(orderData);
     }
@@ -118,9 +106,7 @@ export function SummaryStep() {
 
   const handlePlaceOrderCOD = () => {
     const orderData = {
-      // 🚨 CRITICAL FIX: Explicitly include customerInfo
       customerInfo: checkoutData.customerInfo,
-
       items: cart.map((item) => ({
         id: item.id,
         name: item.name,
@@ -129,7 +115,6 @@ export function SummaryStep() {
       })),
       totalAmount: total,
       paymentMethod: "cod" as "cod",
-      // 🚨 FIX IMPLEMENTED: Ensure required fields are present
       shippingInfo: {
         address: checkoutData.shippingInfo.address,
         state: checkoutData.shippingInfo.state,
@@ -140,10 +125,6 @@ export function SummaryStep() {
       },
     };
 
-    // 🚨 CONSOLE LOG: Show the payload that is about to be sent
-    console.log("Sending Order Data (COD):", orderData);
-
-    // Route to the success page immediately on COD to keep it optimistic
     createOrderMutation.mutate(orderData, {
       onSuccess: (data) => {
         toast.success("Order Placed Successfully!", {
@@ -177,14 +158,14 @@ export function SummaryStep() {
 
   if (isVerifying || createOrderMutation.isPending) {
     return (
-      <div className="flex flex-col items-center justify-center space-y-4 py-12 px-4 text-center">
+      <div className="flex flex-col items-center justify-center space-y-4 py-16 px-4 text-center">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
-        <h2 className="text-2xl font-semibold">
+        <h2 className="text-xl sm:text-2xl font-semibold">
           {isVerifying
             ? "Verifying your payment..."
             : "Finalizing your order..."}
         </h2>
-        <p className="text-muted-foreground">
+        <p className="text-muted-foreground text-sm sm:text-base">
           Please do not close this window.
         </p>
       </div>
@@ -195,20 +176,22 @@ export function SummaryStep() {
     initializePaymentMutation.isPending || createOrderMutation.isPending;
 
   return (
-    <div className="space-y-8 px-4 sm:px-6 md:px-8">
-      <h2 className="text-2xl font-semibold text-center md:text-left">
+    <div className="space-y-8 px-3 sm:px-6 md:px-8 py-6 max-w-4xl mx-auto">
+      <h2 className="text-xl sm:text-2xl font-semibold text-center md:text-left">
         Order Summary & Confirmation
       </h2>
 
-      {/* Responsive grid layout */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
-        {/* Left side */}
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Customer Details</CardTitle>
+      {/* ✅ Layout grid with mobile stacking */}
+      <div className="grid grid-cols-1 gap-5 md:grid-cols-2 md:gap-8">
+        {/* Left column */}
+        <div className="flex flex-col space-y-5">
+          <Card className="w-full">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg sm:text-xl">
+                Customer Details
+              </CardTitle>
             </CardHeader>
-            <CardContent className="text-sm space-y-2">
+            <CardContent className="text-sm sm:text-base space-y-1">
               <p>
                 <strong>Name:</strong> {checkoutData.customerInfo.name}
               </p>
@@ -221,52 +204,52 @@ export function SummaryStep() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Shipping Address</CardTitle>
+          <Card className="w-full">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg sm:text-xl">
+                Shipping Address
+              </CardTitle>
             </CardHeader>
-            <CardContent className="text-sm space-y-2">
+            <CardContent className="text-sm sm:text-base space-y-1">
               <p>{checkoutData.shippingInfo.address}</p>
               <p>
                 {checkoutData.shippingInfo.city},{" "}
                 {checkoutData.shippingInfo.state}
               </p>
               <p>{checkoutData.shippingInfo.country}</p>
-              <p className="italic text-muted-foreground">
+              <p className="italic text-muted-foreground text-xs sm:text-sm">
                 Shipping: {shippingText}
               </p>
             </CardContent>
           </Card>
         </div>
 
-        {/* Right side */}
-        <Card className="h-fit">
-          <CardHeader>
-            <CardTitle>Order Totals</CardTitle>
+        {/* Right column */}
+        <Card className="w-full md:h-fit">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg sm:text-xl">Order Totals</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex justify-between text-sm">
+          <CardContent className="space-y-3 text-sm sm:text-base">
+            <div className="flex justify-between">
               <span className="text-muted-foreground">Subtotal</span>
               <span>₦{subtotal.toLocaleString()}</span>
             </div>
 
-            <div className="flex justify-between text-sm">
+            <div className="flex justify-between">
               <span className="text-muted-foreground">Shipping</span>
-              <span className="font-medium text-foreground">
-                {shippingText}
-              </span>
+              <span>{shippingText}</span>
             </div>
 
             <Separator />
 
-            <div className="flex justify-between font-semibold text-lg">
+            <div className="flex justify-between font-semibold text-base sm:text-lg">
               <span>Total</span>
               <span>₦{total.toLocaleString()}</span>
             </div>
 
             <Separator />
 
-            <div className="flex justify-between text-sm">
+            <div className="flex justify-between text-sm sm:text-base">
               <span className="text-muted-foreground">Payment Method</span>
               <span className="font-medium capitalize">
                 {checkoutData.paymentMethod === "cod"
@@ -278,8 +261,8 @@ export function SummaryStep() {
         </Card>
       </div>
 
-      {/* Action buttons */}
-      <div className="flex flex-col sm:flex-row justify-between gap-4 pt-4">
+      {/* ✅ Button group - stacks on mobile */}
+      <div className="flex flex-col sm:flex-row justify-between gap-4 pt-6">
         <Button
           type="button"
           variant="outline"

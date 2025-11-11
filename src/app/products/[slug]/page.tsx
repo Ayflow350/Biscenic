@@ -58,7 +58,7 @@ export default function ProductSlugPage() {
   // DELETED: const [currentVariant, setCurrentVariant] = useState<Variant | null>(null);
 
   // --- NEW DERIVED STATE (EARLY) ---
-  const images = product?.images || [];
+  const images = product?.images || []; // 🚨 DECLARED HERE (Correct Scope)
   const [activeIndex, direction] = carouselState;
   // Casting activeImage to allow access to the new property without a global type change in this file
   const activeImage = (images[activeIndex] ?? images[0]) as ProductImage & {
@@ -206,9 +206,7 @@ export default function ProductSlugPage() {
   // =================================================================
   // SECTION 3: DERIVED STATE & RENDER LOGIC
   // =================================================================
-  // DELETED/MOVED: const images = product.images || []; (now defined early)
-  // DELETED/MOVED: const [activeIndex, direction] = carouselState; (now defined early)
-  // DELETED/MOVED: const activeImage = images[activeIndex] ?? images[0]; (now defined early)
+  // 🚨 FIX: Removed redundant declaration of 'images', 'activeIndex', 'direction', 'activeImage'
   const isEclipsera = displayName.includes("Eclipsera");
   const isEirene = displayName.includes("Eirene");
   const isIvorySilence = displayName.includes("Ivory Silence");
@@ -253,7 +251,8 @@ export default function ProductSlugPage() {
         <div className="mb-8 flex justify-between items-center">
           <Link
             href="/collections"
-            className="flex items-center gap-2 text-muted-foreground hover:text-[#e5c58a]"
+            // 🚨 FIX 1: Change hover color from gold to a theme-aware color
+            className="flex items-center gap-2 text-muted-foreground hover:text-foreground/80"
           >
             <ChevronLeft className="w-4 h-4" /> Back to Collections
           </Link>
@@ -293,7 +292,8 @@ export default function ProductSlugPage() {
                   onClick={() => selectImageByIndex(idx)}
                   className={`relative aspect-square rounded-md overflow-hidden border-2 transition ${
                     idx === activeIndex
-                      ? "border-[#e5c58a]"
+                      ? // 🚨 FIX 2: Change active border from gold to black/ring-foreground
+                        "border-foreground ring-2 ring-foreground/50"
                       : "border-transparent hover:border-border"
                   }`}
                 >
@@ -378,7 +378,8 @@ export default function ProductSlugPage() {
                         onClick={() => setSelectedMaterial("solid")}
                         className={`text-left p-4 border-2 rounded-lg transition-all duration-200 ${
                           selectedMaterial === "solid"
-                            ? "border-[#e5c58a] bg-[#e5c58a]/10 ring-2 ring-[#e5c58a]"
+                            ? // 🚨 FIX 3: Change material selection ring/border from gold to black/foreground
+                              "border-foreground bg-foreground/10 ring-2 ring-foreground/50"
                             : "border-border hover:border-muted-foreground"
                         }`}
                       >
@@ -393,7 +394,8 @@ export default function ProductSlugPage() {
                         onClick={() => setSelectedMaterial("hdf")}
                         className={`text-left p-4 border-2 rounded-lg transition-all duration-200 ${
                           selectedMaterial === "hdf"
-                            ? "border-[#e5c58a] bg-[#e5c58a]/10 ring-2 ring-[#e5c58a]"
+                            ? // 🚨 FIX 3: Change material selection ring/border from gold to black/foreground
+                              "border-foreground bg-foreground/10 ring-2 ring-foreground/50"
                             : "border-border hover:border-muted-foreground"
                         }`}
                       >
@@ -417,7 +419,8 @@ export default function ProductSlugPage() {
                         onClick={() => setSelectedFinish("walnut brown")}
                         className={`p-4 border-2 rounded-lg transition-all duration-200 ${
                           selectedFinish === "walnut brown"
-                            ? "border-[#e5c58a] bg-[#e5c58a]/10 ring-2 ring-[#e5c58a]"
+                            ? // 🚨 FIX 4: Change finish selection ring/border from gold to black/foreground
+                              "border-foreground bg-foreground/10 ring-2 ring-foreground/50"
                             : "border-border hover:border-muted-foreground"
                         }`}
                       >
@@ -435,7 +438,8 @@ export default function ProductSlugPage() {
                         onClick={() => setSelectedFinish("night")}
                         className={`p-4 border-2 rounded-lg transition-all duration-200 ${
                           selectedFinish === "night"
-                            ? "border-[#e5c58a] bg-[#e5c58a]/10 ring-2 ring-[#e5c58a]"
+                            ? // 🚨 FIX 4: Change finish selection ring/border from gold to black/foreground
+                              "border-foreground bg-foreground/10 ring-2 ring-foreground/50"
                             : "border-border hover:border-muted-foreground"
                         }`}
                       >
@@ -484,7 +488,8 @@ export default function ProductSlugPage() {
               className={`w-full font-bold uppercase tracking-wider px-8 py-4 rounded-md transition-colors ${
                 isOutOfStock(product) || isBelysiumAndMissingOptions
                   ? "bg-muted text-muted-foreground cursor-not-allowed"
-                  : "bg-[#e5c58a] text-black hover:bg-[#d4b479]"
+                  : // 🚨 FIX 5: Change button background to black and text to white for light mode minimalist
+                    "bg-foreground text-background hover:bg-foreground/90"
               }`}
             >
               {isOutOfStock(product)
@@ -505,8 +510,9 @@ export default function ProductSlugPage() {
                     onClick={() => setActiveTab(t.id)}
                     className={`uppercase tracking-widest text-sm pb-1 ${
                       activeTab === t.id
-                        ? "text-[#e5c58a] border-b-2 border-[#e5c58a]"
-                        : "text-muted-foreground hover:text-[#e5c58a]"
+                        ? // 🚨 FIX 6: Change active tab text/border from gold to black/foreground
+                          "text-foreground border-b-2 border-foreground"
+                        : "text-muted-foreground hover:text-foreground"
                     }`}
                   >
                     {t.label}
@@ -536,7 +542,8 @@ export default function ProductSlugPage() {
                                 traditional craftsmanship and timeless
                                 durability.
                               </p>
-                              <span className="text-[#e5c58a] font-medium">
+                              {/* 🚨 FIX 7: Change price text from gold to black/foreground */}
+                              <span className="text-foreground font-medium">
                                 {formatCurrencyDisplay(B_ELYS_PRICES.solid)}
                               </span>
                             </div>
@@ -549,7 +556,8 @@ export default function ProductSlugPage() {
                                 consistency. Ideal for those seeking a more
                                 contemporary aesthetic at a lower entry price.
                               </p>
-                              <span className="text-[#e5c58a] font-medium">
+                              {/* 🚨 FIX 7: Change price text from gold to black/foreground */}
+                              <span className="text-foreground font-medium">
                                 {formatCurrencyDisplay(B_ELYS_PRICES.hdf)}
                               </span>
                             </div>
@@ -960,7 +968,8 @@ export default function ProductSlugPage() {
         )}`}
         target="_blank"
         rel="noopener noreferrer"
-        className="fixed bottom-8 right-8 z-50 bg-[#e5c58a] text-black p-4 rounded-full shadow-lg hover:bg-[#d4b479] transition-all duration-300 transform hover:scale-110"
+        // 🚨 FIX 8: Change WhatsApp button background from gold to black/foreground
+        className="fixed bottom-8 right-8 z-50 bg-foreground text-background p-4 rounded-full shadow-lg hover:bg-foreground/90 transition-all duration-300 transform hover:scale-110"
         aria-label="Contact Customer Service on WhatsApp"
       >
         <MessageSquare className="h-6 w-6" />

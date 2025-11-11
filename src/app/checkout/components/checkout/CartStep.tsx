@@ -24,7 +24,7 @@ export function CartStep() {
           our collection to find something you&aposll love.
         </p>
         <Button asChild className="mt-4">
-          <Link href="/shop">Continue Shopping</Link>
+          <Link href="/collections">Continue Shopping</Link>
         </Button>
       </div>
     );

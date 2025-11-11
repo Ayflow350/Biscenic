@@ -363,8 +363,11 @@ export function ShippingStep() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Apartment / Suite (Optional)</FormLabel>
-                  {/* These Input/Textarea components must handle dark mode correctly */}
-                  <Input placeholder="Apt #4B" {...field} />
+                  <Input
+                    placeholder="Apt #4B"
+                    {...field}
+                    className="bg-white dark:bg-black text-black dark:text-white border border-gray-300 dark:border-gray-700 transition-colors"
+                  />
                   <FormMessage />
                 </FormItem>
               )}
@@ -376,8 +379,11 @@ export function ShippingStep() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>ZIP / Postal Code</FormLabel>
-                  {/* These Input/Textarea components must handle dark mode correctly */}
-                  <Input placeholder="Enter postal code" {...field} />
+                  <Input
+                    placeholder="Enter postal code"
+                    {...field}
+                    className="bg-white dark:bg-black text-black dark:text-white border border-gray-300 dark:border-gray-700 transition-colors"
+                  />
                   <FormMessage />
                 </FormItem>
               )}

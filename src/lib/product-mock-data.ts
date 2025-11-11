@@ -92,7 +92,7 @@ export const mockProductData: { [key: string]: Product } = {
   },
   lumivase: {
     _id: "product_lumivase_003",
-    name: "Lumivase",
+    name: "Ivory Silence",
     price: 20000,
     stock: 25,
     category: { name: "Lighting & Decor" },
