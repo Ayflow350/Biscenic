@@ -22,6 +22,10 @@ export function SummaryStep() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
+  // 🚨 CONSOLE LOG: Show the context data that is used for rendering and the payload
+  console.log("Current Checkout Data:", checkoutData);
+  console.log("Current Cart:", cart);
+
   const subtotal = cart.reduce(
     (sum, item) => sum + Number(item.price) * item.quantity,
     0
@@ -37,14 +41,16 @@ export function SummaryStep() {
       toast.success("Order Placed Successfully!", {
         description: `Your order #${data.orderId} has been confirmed.`,
       });
-      clearCart();
+      // REMOVE clearCart() here.
       router.push(`/order-success?orderId=${data.orderId}`);
     },
-    onError: () => {
+    onError: (error) => {
+      console.error("Order creation failed:", error);
       toast.error("Failed to Save Order", {
         description:
           "Your payment was successful, but we failed to save the order. Please contact support.",
       });
+      router.push(`/order-error`);
     },
   });
 
@@ -61,19 +67,35 @@ export function SummaryStep() {
   useEffect(() => {
     if (isVerificationSuccess && verificationData) {
       const orderData = {
-        ...checkoutData,
-        items: cart.map((item) => ({ ...item, price: Number(item.price) })),
+        // 🚨 CRITICAL FIX: Explicitly include customerInfo
+        customerInfo: checkoutData.customerInfo,
+
+        items: cart.map((item) => ({
+          id: item.id,
+          name: item.name,
+          price: Number(item.price),
+          quantity: item.quantity,
+        })),
         totalAmount: total,
         paymentDetails: {
           ...verificationData.data,
           gateway: "flutterwave",
         },
+        // 🚨 FIX IMPLEMENTED: Ensure required fields are present
         shippingInfo: {
+          address: checkoutData.shippingInfo.address,
+          state: checkoutData.shippingInfo.state,
           city: checkoutData.shippingInfo.city,
           country: checkoutData.shippingInfo.country ?? "",
           postalCode: checkoutData.shippingInfo.zipCode ?? "",
+          apartment: checkoutData.shippingInfo.apartment ?? "",
         },
+        paymentMethod: "flutterwave" as const, // <-- Explicitly included
       };
+
+      // 🚨 CONSOLE LOG: Show the payload that is about to be sent
+      console.log("Sending Order Data (Flutterwave):", orderData);
+
       createOrderMutation.mutate(orderData);
     }
     if (isVerificationError) {
@@ -81,6 +103,7 @@ export function SummaryStep() {
         description:
           "We could not confirm your payment. Please contact support if you were debited.",
       });
+      router.push(`/order-error`);
     }
   }, [
     isVerificationSuccess,
@@ -90,21 +113,53 @@ export function SummaryStep() {
     cart,
     total,
     createOrderMutation,
+    router,
   ]);
 
   const handlePlaceOrderCOD = () => {
     const orderData = {
-      ...checkoutData,
-      items: cart.map((item) => ({ ...item, price: Number(item.price) })),
+      // 🚨 CRITICAL FIX: Explicitly include customerInfo
+      customerInfo: checkoutData.customerInfo,
+
+      items: cart.map((item) => ({
+        id: item.id,
+        name: item.name,
+        price: Number(item.price),
+        quantity: item.quantity,
+      })),
       totalAmount: total,
       paymentMethod: "cod" as "cod",
+      // 🚨 FIX IMPLEMENTED: Ensure required fields are present
       shippingInfo: {
+        address: checkoutData.shippingInfo.address,
+        state: checkoutData.shippingInfo.state,
         city: checkoutData.shippingInfo.city,
         country: checkoutData.shippingInfo.country ?? "",
         postalCode: checkoutData.shippingInfo.zipCode ?? "",
+        apartment: checkoutData.shippingInfo.apartment ?? "",
       },
     };
-    createOrderMutation.mutate(orderData);
+
+    // 🚨 CONSOLE LOG: Show the payload that is about to be sent
+    console.log("Sending Order Data (COD):", orderData);
+
+    // Route to the success page immediately on COD to keep it optimistic
+    createOrderMutation.mutate(orderData, {
+      onSuccess: (data) => {
+        toast.success("Order Placed Successfully!", {
+          description: `Your order #${data.orderId} has been confirmed.`,
+        });
+        router.push(`/order-success?orderId=${data.orderId}`);
+      },
+      onError: (error) => {
+        console.error("COD order save failed:", error);
+        toast.error("Failed to Save Order", {
+          description:
+            "There was an issue saving your COD order. Please try again.",
+        });
+        router.push(`/order-error`);
+      },
+    });
   };
 
   const handleFlutterwavePayment = () => {

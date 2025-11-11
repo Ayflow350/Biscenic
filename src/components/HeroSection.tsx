@@ -13,13 +13,14 @@ const slideImages = [
 
 export function HeroSection() {
   return (
-    <section className="relative flex flex-col items-center justify-center text-center text-neutral-800 dark:text-white overflow-hidden min-h-[100vh] sm:min-h-[90vh] md:min-h-[95vh] lg:min-h-[100vh]">
-      {/* Slideshow Background */}
-      <div className="absolute inset-0 z-[-2]">
+    <section className="relative h-[500px] lg:h-[860px] w-full flex flex-col items-center justify-end text-center text-neutral-800 dark:text-white overflow-hidden pb-20 lg:pb-28">
+      {/* Slideshow Container */}
+
+      <div className="absolute top-0 left-0 w-full h-full z-[-2]">
         {slideImages.map((src, index) => (
           <div
             key={src}
-            className="slide"
+            className="slide bg-center bg-no-repeat bg-contain sm:bg-cover transition-all duration-700 ease-in-out"
             style={{
               backgroundImage: `url(${src})`,
               animationDelay: `${index * 6}s`,
@@ -29,18 +30,17 @@ export function HeroSection() {
       </div>
 
       {/* Overlay */}
-      <div className="absolute inset-0 bg-white/30 dark:bg-black/60 z-[-1]" />
+      <div className="absolute top-0 left-0 w-full h-full bg-white/30 dark:bg-black/60 z-[-1]" />
 
       {/* Hero Content */}
-      <div className="relative z-10 flex flex-col items-center justify-center h-full px-4 sm:px-6 md:px-10 lg:px-20 text-center">
-        <h1 className="font-serif text-black dark:text-white text-3xl sm:text-4xl md:text-6xl font-semibold leading-snug sm:leading-tight md:leading-tight mb-6 drop-shadow-md">
+      <div className="z-10 px-4">
+        <h1 className="font-serif text-black dark:text-white text-3xl sm:text-6xl font-semibold leading-tight mb-6">
           Beyond Living
         </h1>
-
         <Link href="/collections">
           <Button
             size="lg"
-            className="bg-[#be9e44] text-black hover:bg-[#d1b56a] font-semibold px-6 sm:px-8 py-4 sm:py-6 text-sm sm:text-base rounded-lg shadow-lg"
+            className="bg-[#be9e44] text-black hover:bg-[#d1b56a] font-semibold px-8 py-6 text-sm"
           >
             Explore Collections
           </Button>
@@ -48,65 +48,9 @@ export function HeroSection() {
       </div>
 
       {/* Footer */}
-      <footer className="absolute bottom-4 md:bottom-6 text-xs sm:text-sm text-black dark:text-white z-10 px-4 text-center">
+      <footer className="absolute bottom-4 text-xs text-black dark:text-white z-10">
         &copy; 2025 Biscenic. All rights reserved.
       </footer>
-
-      {/* Background Animation Styles */}
-      <style jsx>{`
-        .slide {
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          background-position: center;
-          background-repeat: no-repeat;
-          background-size: cover;
-          opacity: 0;
-          animation: fade 30s infinite;
-          transition: all 0.5s ease;
-        }
-
-        /* Parallax for large screens */
-        @media (min-width: 1024px) {
-          .slide {
-            background-attachment: fixed;
-            background-size: cover;
-          }
-        }
-
-        /* Mobile — shorter height, maintain good coverage */
-        @media (max-width: 768px) {
-          section {
-            min-height: 80vh; /* shorter hero height on mobile */
-          }
-
-          .slide {
-            height: 70vh;
-            background-size: contain;
-            background-position: center top; /* keep upper portion visible */
-          }
-        }
-
-        @keyframes fade {
-          0% {
-            opacity: 0;
-          }
-          10% {
-            opacity: 1;
-          }
-          30% {
-            opacity: 1;
-          }
-          40% {
-            opacity: 0;
-          }
-          100% {
-            opacity: 0;
-          }
-        }
-      `}</style>
     </section>
   );
 }

@@ -39,13 +39,16 @@ interface OrderCreationPayload {
  * Creates a new order in your database.
  */
 export const createOrder = async (orderData: OrderCreationPayload) => {
-  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/orders`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(orderData),
-  });
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/payments/create-order`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(orderData),
+    }
+  );
 
   if (!response.ok) {
     const errorData = await response.json();

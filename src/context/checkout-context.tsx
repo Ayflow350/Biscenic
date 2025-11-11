@@ -1,8 +1,18 @@
+// src/context/checkout-context.tsx (CORRECTED)
+
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  ReactNode,
+  useEffect,
+} from "react";
+// Assuming you have toast
+// import { toast } from "sonner";
 
-// Define the steps of our checkout process
+// Define the steps of our checkout process (Remains the same)
 export const STEPS = [
   "Cart",
   "Customer Info",
@@ -13,7 +23,7 @@ export const STEPS = [
 
 export type Step = (typeof STEPS)[number];
 
-// Define the shape of the data we'll collect
+// Define the shape of the data we'll collect (Remains the same)
 interface CheckoutData {
   customerInfo: {
     name: string;
@@ -31,7 +41,7 @@ interface CheckoutData {
   paymentMethod: "flutterwave" | "cod";
 }
 
-// Define the shape of our context
+// Define the shape of our context (Remains the same)
 interface CheckoutContextType {
   currentStep: Step;
   goToNextStep: () => void;
@@ -45,13 +55,55 @@ const CheckoutContext = createContext<CheckoutContextType | undefined>(
   undefined
 );
 
+// Define the Session Storage Key
+const CHECKOUT_STORAGE_KEY = "latest_checkout_data";
+
+// Define the initial state (Used if no data is in storage)
+const initialCheckoutData: CheckoutData = {
+  customerInfo: { name: "", email: "", phone: "" },
+  shippingInfo: { address: "", city: "", state: "" },
+  paymentMethod: "flutterwave",
+};
+
 export const CheckoutProvider = ({ children }: { children: ReactNode }) => {
-  const [currentStep, setCurrentStep] = useState<Step>("Cart");
-  const [checkoutData, setCheckoutData] = useState<CheckoutData>({
-    customerInfo: { name: "", email: "", phone: "" },
-    shippingInfo: { address: "", city: "", state: "" },
-    paymentMethod: "flutterwave",
+  // 🚨 1. Initialization logic that retrieves data from session storage
+  const [checkoutData, setCheckoutData] = useState<CheckoutData>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const saved = sessionStorage.getItem(CHECKOUT_STORAGE_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          // Return saved data, merging it with defaults in case of missing fields
+          return { ...initialCheckoutData, ...parsed };
+        }
+      } catch (error) {
+        console.error(
+          "Could not load checkout data from session storage:",
+          error
+        );
+      }
+    }
+    return initialCheckoutData;
   });
+
+  const [currentStep, setCurrentStep] = useState<Step>("Cart");
+
+  // 🚨 2. Effect to SAVE data to session storage whenever checkoutData changes
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      try {
+        sessionStorage.setItem(
+          CHECKOUT_STORAGE_KEY,
+          JSON.stringify(checkoutData)
+        );
+      } catch (error) {
+        console.error(
+          "Could not save checkout data to session storage:",
+          error
+        );
+      }
+    }
+  }, [checkoutData]);
 
   const goToNextStep = () => {
     const currentIndex = STEPS.indexOf(currentStep);
@@ -93,7 +145,7 @@ export const CheckoutProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-// Custom hook to easily access the context
+// Custom hook to easily access the context (Remains the same)
 export const useCheckout = () => {
   const context = useContext(CheckoutContext);
   if (!context) {
