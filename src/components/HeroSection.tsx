@@ -2,26 +2,25 @@
 
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { Header } from "../components/Header"; // <-- IMPORT THE NEW HEADER
 
-const topImages = [
-  "/hero-slides/lumivase/1.PNG", // mobile only
+const slideImages = [
   "/hero-slides/115.PNG",
   "/hero-slides/111.png",
   "/hero-slides/112.png",
+  "/hero-slides/116.PNG",
+  "/hero-slides/113.png",
 ];
 
 export function HeroSection() {
-  // Slice the array to skip the first image for desktop slideshow
-  const desktopImages = topImages.slice(1);
-
   return (
-    <section className="relative h-[100vh] w-full flex flex-col items-center justify-center text-center text-white dark:text-white overflow-hidden">
-      {/* === DESKTOP SLIDESHOW (skip first image) === */}
-      <div className="absolute inset-0 z-[-2] hidden sm:block">
-        {desktopImages.map((src, index) => (
+    <section className="relative h-screen w-full flex flex-col items-center justify-center text-center text-neutral-800 dark:text-white overflow-hidden">
+      {/* Slideshow Container */}
+      <div className="absolute top-0 left-0 w-full h-full z-[-2]">
+        {slideImages.map((src, index) => (
           <div
             key={src}
-            className="slide bg-center bg-cover absolute inset-0 opacity-0"
+            className="slide"
             style={{
               backgroundImage: `url(${src})`,
               animationDelay: `${index * 6}s`,
@@ -30,59 +29,30 @@ export function HeroSection() {
         ))}
       </div>
 
-      {/* === MOBILE SINGLE IMAGE === */}
-      <div
-        className="absolute inset-0 z-[-2] sm:hidden bg-center bg-cover"
-        style={{ backgroundImage: `url(${topImages[0]})` }} // mobile first image
-      />
+      {/* Overlay */}
+      <div className="absolute top-0 left-0 w-full h-full bg-white/30 dark:bg-black/60 z-[-1]"></div>
 
-      {/* === Overlay === */}
-      <div className="absolute inset-0 bg-black/60 dark:bg-black/60 z-[-1]" />
-
-      {/* === Hero Content === */}
-      <div className="z-10 px-4">
-        <h1 className="font-serif text- dark:text-white text-3xl sm:text-6xl font-semibold leading-tight mb-6">
+      {/* Hero Content */}
+      <div className="z-10 px-4 pt-16">
+        {" "}
+        {/* Added padding-top to avoid overlap with header */}
+        <h1 className="font-serif text-black  dark:text-white text-4xl md:text-6xl font-semibold leading-tight mb-6">
           Beyond Living
         </h1>
         <Link href="/collections">
           <Button
             size="lg"
-            className="bg-[#a1823d] text-black font-semibold px-8 py-6 text-sm active:bg-[#be9e44] transition-colors duration-150"
+            className="bg-[#be9e44] text-black  hover:bg-[#d1b56a] font-semibold px-8 py-6 text-sm"
           >
             Explore Collections
           </Button>
         </Link>
       </div>
 
-      {/* === Footer === */}
-      <footer className="absolute bottom-4 text-xs text-black dark:text-white z-10">
+      {/* Footer */}
+      <footer className="absolute bottom-6 text-xs text-black dark:text-white z-10">
         &copy; 2025 Biscenic. All rights reserved.
       </footer>
-
-      {/* === Animation Styles === */}
-      <style jsx>{`
-        .slide {
-          animation: fade 24s infinite ease-in-out;
-        }
-
-        @keyframes fade {
-          0% {
-            opacity: 0;
-          }
-          10% {
-            opacity: 1;
-          }
-          35% {
-            opacity: 1;
-          }
-          45% {
-            opacity: 0;
-          }
-          100% {
-            opacity: 0;
-          }
-        }
-      `}</style>
     </section>
   );
 }
