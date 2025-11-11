@@ -84,13 +84,13 @@ const useOrderCreationMutation = (
           "Payment successful, but order save failed. Contact support.",
       });
       // Route to error page on backend write failure
-      router.replace("https://biscenic-leun.vercel.app/order-error");
+      router.replace("/order-error");
     },
   });
 };
 // -------------------------------------------------------------------
 
-// Helper component for clean rendering
+// 🚨 UPDATED Helper component to include the Totals Card and Items Card
 const OrderDisplay = ({
   orderToDisplay,
   formatCurrency,
@@ -98,8 +98,36 @@ const OrderDisplay = ({
   orderToDisplay: OrderDetails;
   formatCurrency: (val: number) => string;
 }) => (
-  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 text-left">
-    <Card className="lg:col-span-2">
+  // This component now represents the combined Right Column (Totals and Items)
+  <div className="space-y-6">
+    {/* ORDER TOTALS CARD */}
+    <Card className="h-fit">
+      <CardHeader>
+        <CardTitle>Order Totals</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="flex justify-between text-sm">
+          <span className="text-muted-foreground">Subtotal</span>
+          <span>{formatCurrency(orderToDisplay.subtotal)}</span>
+        </div>
+        <div className="flex justify-between text-sm">
+          <span className="text-muted-foreground">Shipping</span>
+          <span>
+            {orderToDisplay.shippingFee > 0
+              ? formatCurrency(orderToDisplay.shippingFee)
+              : "To be discussed"}
+          </span>
+        </div>
+        <Separator />
+        <div className="flex justify-between font-semibold text-lg">
+          <span>Total</span>
+          <span>{formatCurrency(orderToDisplay.totalAmount)}</span>
+        </div>
+      </CardContent>
+    </Card>
+
+    {/* ITEMS ORDERED CARD */}
+    <Card>
       <CardHeader>
         <CardTitle>Items Ordered</CardTitle>
       </CardHeader>
@@ -118,37 +146,6 @@ const OrderDisplay = ({
             </p>
           </div>
         ))}
-      </CardContent>
-    </Card>
-    <Card className="lg:col-span-1">
-      <CardHeader>
-        <CardTitle>Summary</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-3 text-sm">
-        <div className="flex justify-between">
-          <span>Subtotal</span>
-          <span>{formatCurrency(orderToDisplay.subtotal)}</span>
-        </div>
-        <div className="flex justify-between">
-          <span>Shipping</span>
-          <span>
-            {orderToDisplay.shippingFee > 0
-              ? formatCurrency(orderToDisplay.shippingFee)
-              : "To be discussed"}
-          </span>
-        </div>
-        <Separator />
-        <div className="flex justify-between font-bold text-base">
-          <span>Total</span>
-          <span>{formatCurrency(orderToDisplay.totalAmount)}</span>
-        </div>
-        <h3 className="font-semibold pt-4">Shipping To:</h3>
-        <p className="text-xs text-muted-foreground leading-snug">
-          {orderToDisplay.shippingAddress.address},{" "}
-          {orderToDisplay.shippingAddress.city},{" "}
-          {orderToDisplay.shippingAddress.state},{" "}
-          {orderToDisplay.shippingAddress.country}
-        </p>
       </CardContent>
     </Card>
   </div>
@@ -234,31 +231,18 @@ function OrderSuccessContent() {
       isVerificationSuccess &&
       verificationData &&
       !finalOrderId &&
-      !isCreatingOrder &&
-      orderToDisplay // Only proceed if optimistic data is available
+      !isCreatingOrder
     ) {
-      // 🚨 FIX IMPLEMENTED HERE: Construct payload to match OrderCreationPayload
       const orderData = {
-        // 1. Customer Info (Top Level)
         customerInfo: checkoutData.customerInfo,
-
-        // 2. Items (Use items from orderToDisplay, which were derived from cart)
-        items: orderToDisplay.items,
-
-        // 3. Total Amount
-        totalAmount: orderToDisplay.totalAmount,
-
-        // 4. Payment Method
+        items: orderToDisplay?.items || [],
+        totalAmount: orderToDisplay?.totalAmount || 0,
         paymentMethod: "flutterwave" as const,
-
-        // 5. Payment Details (Gateway response)
         paymentDetails: {
           ...verificationData.data,
           gateway: "flutterwave",
           transactionReference: tx_ref,
         },
-
-        // 6. Shipping Info (Fully detailed object matching Mongoose/Payload)
         shippingInfo: {
           address: checkoutData.shippingInfo.address,
           state: checkoutData.shippingInfo.state,
@@ -524,7 +508,6 @@ function OrderSuccessContent() {
 
         {/* Action Buttons */}
         <div className="flex flex-wrap justify-center gap-3 pt-4">
-          {/* ... (Buttons remain the same) ... */}
           <Button
             onClick={handleDownloadPDF}
             variant="outline"
