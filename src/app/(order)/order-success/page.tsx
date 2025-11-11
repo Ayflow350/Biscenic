@@ -2,7 +2,7 @@
 "use client";
 
 import { useSearchParams, useRouter } from "next/navigation";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, Suspense } from "react";
 import Link from "next/link";
 import {
   CheckCircle,
@@ -506,8 +506,10 @@ export default function OrderSuccessPageWrapper() {
 
   return (
     // The original OrderSuccessPage is renamed to OrderSuccessContent
-    <CheckoutProvider>
-      <OrderSuccessContent />
-    </CheckoutProvider>
+    <Suspense fallback={<OrderSummarySkeleton />}>
+      <CheckoutProvider>
+        <OrderSuccessContent />
+      </CheckoutProvider>
+    </Suspense>
   );
 }
