@@ -470,13 +470,75 @@ function OrderSuccessContent() {
           </p>
         </div>
 
-        <OrderDisplay
-          orderToDisplay={orderToDisplay}
-          formatCurrency={formatCurrency}
-        />
+        {/* 🚨 MODIFICATION START: Replicate the Summary Step's detail layout */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 text-left">
+          {/* Left Column: Customer and Shipping */}
+          <div className="space-y-6">
+            {/* CUSTOMER DETAILS CARD (NEW) */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Customer Details</CardTitle>
+              </CardHeader>
+              <CardContent className="text-sm space-y-2">
+                <p>
+                  <strong>Name:</strong> {checkoutData.customerInfo.name}
+                </p>
+                <p>
+                  <strong>Email:</strong> {checkoutData.customerInfo.email}
+                </p>
+                <p>
+                  <strong>Phone:</strong> {checkoutData.customerInfo.phone}
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* SHIPPING ADDRESS CARD (Replicated for clarity) */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Shipping Address</CardTitle>
+              </CardHeader>
+              <CardContent className="text-sm space-y-2">
+                <p>{orderToDisplay.shippingAddress.address}</p>
+                <p>
+                  {orderToDisplay.shippingAddress.city},{" "}
+                  {orderToDisplay.shippingAddress.state}
+                </p>
+                <p>{orderToDisplay.shippingAddress.country}</p>
+                <p className="italic text-muted-foreground">
+                  Payment: {orderToDisplay.paymentMethod}
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Right Column: Order Totals and Items */}
+          <div className="space-y-6">
+            {/* Order Items Display */}
+            <OrderDisplay
+              orderToDisplay={orderToDisplay}
+              formatCurrency={formatCurrency}
+            />
+          </div>
+        </div>
+        {/* 🚨 MODIFICATION END */}
 
         {/* Action Buttons */}
         <div className="flex flex-wrap justify-center gap-3 pt-4">
+          {/* ... (Buttons remain the same) ... */}
+          <Button
+            onClick={handleDownloadPDF}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <Download className="h-4 w-4" /> Download Invoice
+          </Button>
+          <Button
+            onClick={handleShare}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <Share2 className="h-4 w-4" /> Share Order
+          </Button>
           <Button asChild className="flex items-center gap-2">
             <Link href="/collections">
               <Home className="h-4 w-4" /> Back to Collections
