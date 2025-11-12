@@ -349,14 +349,39 @@ export default function ProductSlugPage() {
                   </p>
                 </>
               )}
-              {(isEirene || isIvorySilence) && (
-                <p>
-                  Sculpted from oak wood, framed in glass, and grounded in white
-                  sand and stones, the Lumivase Eirene holds a bonsai that
-                  represents harmony and resilience. It combines natural
-                  elements with thoughtful design and integrated technology to
-                  create calm, clarity, and balance in any space.
-                </p>
+              {isEirene && (
+                <>
+                  <p>
+                    Nature held in form sand, gemstones, and oak; a meeting
+                    place of nature and technology. A vessel that listens as
+                    much as she holds.
+                  </p>
+                  <p>Year: 2025 Origin: Biscenic</p>
+                  <p>
+                    The Lumivase Eirene was born from a desire to weave two
+                    realms into one vessel the stillness of nature and the quiet
+                    hum of modern life. Sand and gemstones recall rivers and
+                    earth, grounding her in memory, while the oak frame offers
+                    permanence. Sound threads through as a living pulse. She
+                    listens and responds, reminding us that technology can feel
+                    alive when it moves with nature, not against it.
+                  </p>
+                  <p>
+                    “She is a fragment of atmosphere, a gesture beyond living.”
+                  </p>
+                </>
+              )}
+
+              {isIvorySilence && (
+                <>
+                  <p>
+                    Sculpted from oak wood, framed in glass, and grounded in
+                    white sand and stones, the Lumivase holds a bonsai that
+                    represents harmony and resilience. It combines natural
+                    elements with thoughtful design and integrated technology to
+                    create calm, clarity, and balance in any space.
+                  </p>
+                </>
               )}
             </div>
             <div className="border-y border-border divide-y divide-border mb-8">
