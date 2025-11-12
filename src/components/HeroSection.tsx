@@ -5,8 +5,8 @@ import Link from "next/link";
 
 const topImages = [
   "/hero-slides/lumivase/1.PNG", // mobile only
-  "/hero-slides/1.PNG",
-  "/hero-slides/2.PNG",
+  "/hero-slides/Herobed.png",
+  "/hero-slides/115.PNG",
   "/hero-slides/3.JPG",
 ];
 
