@@ -151,10 +151,6 @@ export default function CollectionsPage() {
           <h1 className="font-serif text-5xl md:text-6xl font-extrabold tracking-tight">
             Collections
           </h1>
-          <p className="mt-4 mx-auto max-w-2xl text-muted-foreground text-lg leading-relaxed">
-            Discover curated pieces objects of presence, material and narrative,
-            composed with restraint and warmth.
-          </p>
         </header>
 
         <section aria-label="Collections grid">

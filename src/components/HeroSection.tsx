@@ -5,11 +5,14 @@ import Link from "next/link";
 
 const topImages = [
   "/hero-slides/lumivase/1.PNG", // mobile only
+
+  "/hero-slides/biglum.png",
   "/hero-slides/Herobed.png",
+  "/hero-slides/bellie.png",
   "/hero-slides/115.PNG",
   "/hero-slides/biglumi.png",
   "/hero-slides/biglumii.png",
-  "/hero-slides/biglum.png",
+  "/contactBed.png",
 ];
 
 export function HeroSection() {

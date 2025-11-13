@@ -10,7 +10,7 @@ export default function AboutPage() {
         <section
           className="relative h-[60vh] sm:h-[70vh] md:h-[80vh] flex flex-col justify-end p-6 sm:p-8 md:p-12 rounded-3xl overflow-hidden bg-cover bg-center"
           style={{
-            backgroundImage: `linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.5)), url('/Herofurn.png')`,
+            backgroundImage: `linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.5)), url('hero-slides/112.png')`,
           }}
         >
           <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 items-end">

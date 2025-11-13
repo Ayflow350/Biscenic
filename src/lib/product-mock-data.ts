@@ -78,7 +78,7 @@ export const mockProductData: { [key: string]: Product } = {
         // ADDED: Use the same override name for all images of this variant
         displayNameOverride: "B'elysium Walnut Brown",
       },
-      // Example of adding a second color variant (B'elysium Night)
+
       /*
       {
         _id: "img_bel_4_night",
@@ -106,17 +106,24 @@ export const mockProductData: { [key: string]: Product } = {
         displayNameOverride: "Eirene",
       },
       {
+        _id: "img_lum_3",
+        url: "/products/lumivase/image3.jpg",
+        isMain: false,
+        styleName: "Base Detail",
+        displayNameOverride: "Eclipsera",
+      },
+      {
         _id: "img_lum_2",
         url: "/products/lumivase/image2.jpg",
         isMain: false,
         styleName: "Ivory Silence",
       },
       {
-        _id: "img_lum_3",
-        url: "/products/lumivase/image3.jpg",
+        _id: "img_lum_4",
+        url: "/products/lumivase/image4.png",
         isMain: false,
         styleName: "Base Detail",
-        displayNameOverride: "Eclipsera",
+        displayNameOverride: "Crimson",
       },
     ],
   },

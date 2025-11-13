@@ -54,12 +54,12 @@ type LumivaseType = "Eirene" | "Eclipsera";
 const LUMIVASE_OPTIONS = {
   Eirene: {
     material: "Natural Oak",
-    price: 2000000,
+    price: 850000,
     color: "#c09b6e", // Placeholder color for Eirene wood
   },
   Eclipsera: {
     material: "Obsidian Black",
-    price: 2000000,
+    price: 950000,
     color: "#1C1C1C", // Placeholder color for Eclipsera wood
   },
 };
@@ -71,13 +71,13 @@ const LUMIVASE_SELECTIONS: Record<
 > = {
   Eirene: {
     displayName: "Lumivase Eirene",
-    price: 2000000,
+    price: 850000,
     secondaryDetail: "Natural Oak",
     color: LUMIVASE_OPTIONS.Eirene.color,
   },
   Eclipsera: {
     displayName: "Lumivase Eclipsera",
-    price: 2000000,
+    price: 950000,
     secondaryDetail: "Obsidian Black",
     color: LUMIVASE_OPTIONS.Eclipsera.color,
   },
@@ -329,6 +329,8 @@ export default function ProductSlugPage() {
   const isEclipsera = displayName.includes("Eclipsera");
   const isEirene = displayName.includes("Eirene");
   const isIvorySilence = displayName.includes("Ivory Silence");
+  // 🚨 NEW CHECK: Determine if the current product is the one that should be out of stock
+  const isCrimson = displayName.includes("Crimson");
 
   const formatCurrencyDisplay = (val: number | null) =>
     new Intl.NumberFormat("en-NG", {
@@ -366,6 +368,10 @@ export default function ProductSlugPage() {
     isBelysium && (!selectedMaterial || !selectedSize || !selectedFinish);
   const isLumivaseMissing = isLumivase && !selectedLumivaseOption;
   const isMissingOptions = isBelysiumMissing || isLumivaseMissing;
+
+  // 🚨 CRITICAL FIX: The final out-of-stock state includes the global product check and the Crimson/Ivory Silence checks
+  const isProductUnavailable =
+    isOutOfStock(product) || isCrimson || isIvorySilence;
 
   return (
     <main className="min-h-screen bg-background text-foreground p-6 sm:p-12">
@@ -438,28 +444,17 @@ export default function ProductSlugPage() {
             <div className="text-muted-foreground leading-relaxed mb-8 flex flex-col space-y-4">
               {isBelysium && (
                 <>
-                  <p>A sanctuary of rest.</p>
-
-                  <p>Year: 2025 Origin: Biscenic</p>
-
                   <p>
-                    B’elysium was envisioned as a remedy, a place where body,
-                    mind, and memory realign. Sculpted from Ìrókò, its frame
-                    carries both heritage and strength. Hidden vaults and
-                    discreet drawers keep personal ritual close, while an
-                    integrated sound system weaves tones that calm the nervous
-                    system and invite deep restoration.
+                    To rest in B’elysium is to enter a dialogue between silence
+                    and presence. The bed cradle the body as it listens,
+                    responds, and heals. It is designed as both a centerpiece of
+                    living art and a wellness system, bridging ancient rituals
+                    of rest with futuristic intelligence.
                   </p>
-
-                  <p>
-                    More than furniture, it is a chamber of renewal a living
-                    instrument that listens, restores, and holds the quiet
-                    weight of dreams.
-                  </p>
-
-                  <p>
-                    Materials: Ìrókò, hidden vaults, three drawers with swipe
-                    card access, integrated sound system.
+                  <p className="pt-2 italic">
+                    B’elysium is not simply furniture.
+                    <br />
+                    It is a portal to renewal.
                   </p>
                 </>
               )}
@@ -482,39 +477,14 @@ export default function ProductSlugPage() {
                   </p>
                 </>
               )}
-              {isEirene && (
-                <>
-                  <p>
-                    Nature held in form sand, gemstones, and oak; a meeting
-                    place of nature and technology. A vessel that listens as
-                    much as she holds.
-                  </p>
-                  <p>Year: 2025 Origin: Biscenic</p>
-                  <p>
-                    The Lumivase Eirene was born from a desire to weave two
-                    realms into one vessel the stillness of nature and the quiet
-                    hum of modern life. Sand and gemstones recall rivers and
-                    earth, grounding her in memory, while the oak frame offers
-                    permanence. Sound threads through as a living pulse. She
-                    listens and responds, reminding us that technology can feel
-                    alive when it moves with nature, not against it.
-                  </p>
-                  <p>
-                    “She is a fragment of atmosphere, a gesture beyond living.”
-                  </p>
-                </>
-              )}
-
-              {isIvorySilence && (
-                <>
-                  <p>
-                    Sculpted from oak wood, framed in glass, and grounded in
-                    white sand and stones, the Lumivase holds a bonsai that
-                    represents harmony and resilience. It combines natural
-                    elements with thoughtful design and integrated technology to
-                    create calm, clarity, and balance in any space.
-                  </p>
-                </>
+              {(isEirene || isIvorySilence) && (
+                <p>
+                  Sculpted from oak wood, framed in glass, and grounded in white
+                  sand and stones, the Lumivase Eirene holds a bonsai that
+                  represents harmony and resilience. It combines natural
+                  elements with thoughtful design and integrated technology to
+                  create calm, clarity, and balance in any space.
+                </p>
               )}
             </div>
             <div className="border-y border-border divide-y divide-border mb-8">
@@ -540,14 +510,14 @@ export default function ProductSlugPage() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {/* Map the consolidated Lumivase options */}
                     {Object.entries(LUMIVASE_SELECTIONS).map(
-                      ([key, options]) => (
+                      ([type, options]) => (
                         <button
-                          key={key}
+                          key={type}
                           onClick={() =>
-                            handleSelectProductType(key as LumivaseSelectionKey)
+                            handleSelectProductType(type as LumivaseType)
                           }
                           className={`text-left p-4 border-2 rounded-lg transition-all duration-200 ${
-                            selectedLumivaseOption === key
+                            selectedLumivaseOption === type
                               ? "border-foreground bg-foreground/10 ring-2 ring-foreground/50"
                               : "border-border hover:border-muted-foreground"
                           }`}
@@ -707,41 +677,54 @@ export default function ProductSlugPage() {
               )}
 
               {/* QUANTITY SELECTION */}
-              <div className="py-6 flex justify-between items-center">
-                <p className="uppercase text-sm tracking-widest text-muted-foreground">
-                  Quantity
-                </p>
-                <div className="flex items-center gap-4">
-                  <button
-                    onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                    disabled={quantity === 1}
-                    className="px-3 py-1 border border-border rounded-md hover:bg-muted disabled:opacity-50"
-                  >
-                    -
-                  </button>
-                  <span className="w-8 text-center text-lg">{quantity}</span>
-                  <button
-                    onClick={() => setQuantity((q) => q + 1)}
-                    className="px-3 py-1 border border-border rounded-md hover:bg-muted"
-                  >
-                    +
-                  </button>
+              {/* 🚨 CONDITIONAL RENDER: Hide Quantity selector if Crimson or Ivory Silence is selected */}
+              {!isProductUnavailable ? (
+                <div className="py-6 flex justify-between items-center">
+                  <p className="uppercase text-sm tracking-widest text-muted-foreground">
+                    Quantity
+                  </p>
+                  <div className="flex items-center gap-4">
+                    <button
+                      onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                      disabled={quantity === 1}
+                      className="px-3 py-1 border border-border rounded-md hover:bg-muted disabled:opacity-50"
+                    >
+                      -
+                    </button>
+                    <span className="w-8 text-center text-lg">{quantity}</span>
+                    <button
+                      onClick={() => setQuantity((q) => q + 1)}
+                      className="px-3 py-1 border border-border rounded-md hover:bg-muted"
+                    >
+                      +
+                    </button>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                // 🚨 NEW MESSAGE: Show the "Out of Stock" message instead of the selector
+                <div className="py-6 text-center">
+                  <p className="text-lg font-semibold text-red-500">
+                    {displayName} is currently unavailable.
+                  </p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Please check back later or select a different option.
+                  </p>
+                </div>
+              )}
             </div>
 
             <Button
               // 🚨 UPDATED DISABLED CHECK: Handle missing options for both products
               onClick={handleAddToCart}
-              disabled={isOutOfStock(product) || isMissingOptions}
+              disabled={isProductUnavailable || isMissingOptions}
               className={`w-full font-bold uppercase tracking-wider px-8 py-4 rounded-md transition-colors ${
-                isOutOfStock(product) || isMissingOptions
+                isProductUnavailable || isMissingOptions
                   ? "bg-muted text-muted-foreground cursor-not-allowed"
                   : // 🚨 FIX 5: Change button background to black and text to white for light mode minimalist
                     "bg-foreground text-background hover:bg-foreground/90"
               }`}
             >
-              {isOutOfStock(product)
+              {isProductUnavailable
                 ? "OUT OF STOCK"
                 : // 🚨 UPDATED MESSAGES: Priority based on dependency
                 isLumivase && !selectedLumivaseOption
