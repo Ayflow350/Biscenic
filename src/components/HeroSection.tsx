@@ -7,7 +7,9 @@ const topImages = [
   "/hero-slides/lumivase/1.PNG", // mobile only
   "/hero-slides/Herobed.png",
   "/hero-slides/115.PNG",
-  "/hero-slides/3.JPG",
+  "/hero-slides/biglumi.png",
+  "/hero-slides/biglumii.png",
+  "/hero-slides/biglum.png",
 ];
 
 export function HeroSection() {

@@ -438,17 +438,28 @@ export default function ProductSlugPage() {
             <div className="text-muted-foreground leading-relaxed mb-8 flex flex-col space-y-4">
               {isBelysium && (
                 <>
+                  <p>A sanctuary of rest.</p>
+
+                  <p>Year: 2025 Origin: Biscenic</p>
+
                   <p>
-                    To rest in B’elysium is to enter a dialogue between silence
-                    and presence. The bed cradle the body as it listens,
-                    responds, and heals. It is designed as both a centerpiece of
-                    living art and a wellness system, bridging ancient rituals
-                    of rest with futuristic intelligence.
+                    B’elysium was envisioned as a remedy, a place where body,
+                    mind, and memory realign. Sculpted from Ìrókò, its frame
+                    carries both heritage and strength. Hidden vaults and
+                    discreet drawers keep personal ritual close, while an
+                    integrated sound system weaves tones that calm the nervous
+                    system and invite deep restoration.
                   </p>
-                  <p className="pt-2 italic">
-                    B’elysium is not simply furniture.
-                    <br />
-                    It is a portal to renewal.
+
+                  <p>
+                    More than furniture, it is a chamber of renewal a living
+                    instrument that listens, restores, and holds the quiet
+                    weight of dreams.
+                  </p>
+
+                  <p>
+                    Materials: Ìrókò, hidden vaults, three drawers with swipe
+                    card access, integrated sound system.
                   </p>
                 </>
               )}
@@ -471,14 +482,39 @@ export default function ProductSlugPage() {
                   </p>
                 </>
               )}
-              {(isEirene || isIvorySilence) && (
-                <p>
-                  Sculpted from oak wood, framed in glass, and grounded in white
-                  sand and stones, the Lumivase Eirene holds a bonsai that
-                  represents harmony and resilience. It combines natural
-                  elements with thoughtful design and integrated technology to
-                  create calm, clarity, and balance in any space.
-                </p>
+              {isEirene && (
+                <>
+                  <p>
+                    Nature held in form sand, gemstones, and oak; a meeting
+                    place of nature and technology. A vessel that listens as
+                    much as she holds.
+                  </p>
+                  <p>Year: 2025 Origin: Biscenic</p>
+                  <p>
+                    The Lumivase Eirene was born from a desire to weave two
+                    realms into one vessel the stillness of nature and the quiet
+                    hum of modern life. Sand and gemstones recall rivers and
+                    earth, grounding her in memory, while the oak frame offers
+                    permanence. Sound threads through as a living pulse. She
+                    listens and responds, reminding us that technology can feel
+                    alive when it moves with nature, not against it.
+                  </p>
+                  <p>
+                    “She is a fragment of atmosphere, a gesture beyond living.”
+                  </p>
+                </>
+              )}
+
+              {isIvorySilence && (
+                <>
+                  <p>
+                    Sculpted from oak wood, framed in glass, and grounded in
+                    white sand and stones, the Lumivase holds a bonsai that
+                    represents harmony and resilience. It combines natural
+                    elements with thoughtful design and integrated technology to
+                    create calm, clarity, and balance in any space.
+                  </p>
+                </>
               )}
             </div>
             <div className="border-y border-border divide-y divide-border mb-8">
