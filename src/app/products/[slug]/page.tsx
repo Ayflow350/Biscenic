@@ -40,8 +40,8 @@ type Size = "4.5 ft × 6 ft" | "6 ft × 6 ft";
 
 const B_ELYS_OPTIONS = {
   solid: {
-    "4.5 ft × 6 ft": 2800000,
-    "6 ft × 6 ft": 3733000,
+    "4.5 ft × 6 ft": 2700000,
+    "6 ft × 6 ft": 3600000,
   },
   hdf: {
     "4.5 ft × 6 ft": 2000000,
