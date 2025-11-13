@@ -22,7 +22,7 @@ const collectionsData: CollectionCardProps[] = [
     href: "/products/atheris",
     isComingSoon: true,
     variant: "contain", // "contain" shows full image, "cover" crops for dramatic fill
-    description: "Material study in form and line.",
+    description: "The soul of the Earth reimagined.",
   },
   {
     title: "Lumivase",
@@ -30,7 +30,7 @@ const collectionsData: CollectionCardProps[] = [
     href: "/products/lumivase",
     isComingSoon: false,
     variant: "cover",
-    description: "Where light becomes a material.",
+    description: "Nature held in form.",
   },
   {
     title: "B'elysium",
@@ -38,7 +38,8 @@ const collectionsData: CollectionCardProps[] = [
     href: "/products/belysium",
     isComingSoon: false,
     variant: "contain",
-    description: "A meditation on scale and texture.",
+    description:
+      "A living instrument that listens, restores, and holds the quiet weight of dreams.",
   },
 ];
 

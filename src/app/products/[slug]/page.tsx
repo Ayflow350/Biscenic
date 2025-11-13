@@ -34,9 +34,53 @@ const motionVariants = {
 const getMainImageId = (images: ProductImage[] = []) =>
   (images.find((img) => img.isMain) || images[0])?._id || null;
 
-const B_ELYS_PRICES = {
-  solid: 2800000,
-  hdf: 2000000,
+// --- B'elysium Options ---
+type Material = "solid" | "hdf";
+type Size = "4.5 ft × 6 ft" | "6 ft × 6 ft";
+
+const B_ELYS_OPTIONS = {
+  solid: {
+    "4.5 ft × 6 ft": 2800000,
+    "6 ft × 6 ft": 3733000,
+  },
+  hdf: {
+    "4.5 ft × 6 ft": 2000000,
+    "6 ft × 6 ft": 2670000,
+  },
+};
+
+// 🚨 NEW DATA STRUCTURE: Lumivase Product Types
+type LumivaseType = "Eirene" | "Eclipsera";
+const LUMIVASE_OPTIONS = {
+  Eirene: {
+    material: "Natural Oak",
+    price: 2000000,
+    color: "#c09b6e", // Placeholder color for Eirene wood
+  },
+  Eclipsera: {
+    material: "Obsidian Black",
+    price: 2000000,
+    color: "#1C1C1C", // Placeholder color for Eclipsera wood
+  },
+};
+// 🚨 Consolidated helper for Lumivase options display
+type LumivaseSelectionKey = LumivaseType;
+const LUMIVASE_SELECTIONS: Record<
+  LumivaseSelectionKey,
+  { displayName: string; price: number; secondaryDetail: string; color: string }
+> = {
+  Eirene: {
+    displayName: "Lumivase Eirene",
+    price: 2000000,
+    secondaryDetail: "Natural Oak",
+    color: LUMIVASE_OPTIONS.Eirene.color,
+  },
+  Eclipsera: {
+    displayName: "Lumivase Eclipsera",
+    price: 2000000,
+    secondaryDetail: "Obsidian Black",
+    color: LUMIVASE_OPTIONS.Eclipsera.color,
+  },
 };
 
 // -------------------- Component --------------------
@@ -55,26 +99,52 @@ export default function ProductSlugPage() {
   const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentModalImageIndex, setCurrentModalImageIndex] = useState(0);
-  // DELETED: const [currentVariant, setCurrentVariant] = useState<Variant | null>(null);
+
+  // 🚨 NEW STATE: For Size Selection (B'elysium)
+  const [selectedSize, setSelectedSize] = useState<Size | null>(null);
+
+  // 🚨 NEW STATE: For Lumivase Product Type Selection
+  const [selectedLumivaseOption, setSelectedLumivaseOption] =
+    useState<LumivaseType | null>(null);
 
   // --- NEW DERIVED STATE (EARLY) ---
-  const images = product?.images || []; // 🚨 DECLARED HERE (Correct Scope)
+  const images = product?.images || []; // 🚨 DEFINED HERE
   const [activeIndex, direction] = carouselState;
-  // Casting activeImage to allow access to the new property without a global type change in this file
   const activeImage = (images[activeIndex] ?? images[0]) as ProductImage & {
     displayNameOverride?: string;
   };
 
   const displayName = useMemo(() => {
-    // Check the active image for an override name, otherwise fall back to the base product name
+    // 🚨 UPDATED: Use selectedProductType name if it's a Lumivase product
+    if (product?.name?.includes("Lumivase") && selectedLumivaseOption) {
+      return `Lumivase ${selectedLumivaseOption}`;
+    }
     return activeImage?.displayNameOverride || product?.name || "";
-  }, [product, activeImage]);
+  }, [product, activeImage, selectedLumivaseOption]);
   // --- END NEW DERIVED STATE ---
 
   const isBelysium = product?.name.includes("B'elysium");
+
+  // 🚨 CORRECTED LUMIVASE CHECK: Check if the product name matches any Lumivase variant
+  const LUMIVASE_PRODUCT_NAMES = [
+    "Eirene",
+    "Ivory Silence",
+    "Eclipsera",
+    "Lumivase",
+  ];
+  const isLumivase =
+    product &&
+    LUMIVASE_PRODUCT_NAMES.some((name) => product?.name?.includes(name)) &&
+    !isBelysium;
+
   const defaultActiveTab = useMemo(
-    () => (isBelysium ? "materials" : "specifications"),
-    [isBelysium]
+    () =>
+      isBelysium
+        ? "materials"
+        : isLumivase
+        ? "specifications"
+        : "specifications",
+    [isBelysium, isLumivase]
   );
   const [activeTab, setActiveTab] = useState(defaultActiveTab);
 
@@ -82,22 +152,51 @@ export default function ProductSlugPage() {
     setActiveTab(defaultActiveTab);
   }, [defaultActiveTab]);
 
-  const [selectedMaterial, setSelectedMaterial] = useState<
-    "solid" | "hdf" | null
-  >(null);
+  const [selectedMaterial, setSelectedMaterial] = useState<Material | null>(
+    null
+  );
   const [selectedFinish, setSelectedFinish] = useState<
     "walnut brown" | "night" | null
   >(null);
   const [currentPrice, setCurrentPrice] = useState<number | null>(null);
 
-  // DELETED: const displayName = currentVariant?.displayName || product?.name || "";
+  // 🚨 NEW HELPER: Get the available size options based on selected material
+  const sizeOptions = useMemo(() => {
+    if (selectedMaterial && B_ELYS_OPTIONS[selectedMaterial]) {
+      return B_ELYS_OPTIONS[selectedMaterial];
+    }
+    return null;
+  }, [selectedMaterial]);
+
+  // 🚨 NEW HELPER: Reset size when material changes
+  const handleSelectMaterial = useCallback((material: Material) => {
+    setSelectedMaterial(material);
+    setSelectedSize(null);
+    setCurrentPrice(null);
+  }, []);
+
+  // 🚨 NEW HELPER: Set size and update price
+  const handleSelectSize = useCallback((size: Size) => {
+    setSelectedSize(size);
+  }, []);
+
+  const handleSelectProductType = useCallback((type: LumivaseType) => {
+    setSelectedLumivaseOption(type);
+  }, []);
 
   const handleAddToCart = useCallback(() => {
-    if (!product || currentPrice === null) return;
-    const isBelysiumProduct = product.name.includes("B'elysium");
+    // 🚨 UPDATED CHECK: Handle missing options for both products
+    const isBelysiumValid =
+      isBelysium && (!selectedMaterial || !selectedSize || !selectedFinish);
+    const isLumivaseValid = isLumivase && !selectedLumivaseOption;
 
-    if (isBelysiumProduct && (!selectedMaterial || !selectedFinish)) {
-      console.error("Material and Finish must be selected for B'elysium");
+    if (
+      !product ||
+      currentPrice === null ||
+      isBelysiumValid ||
+      isLumivaseValid
+    ) {
+      console.error("Missing required product options.");
       return;
     }
 
@@ -105,14 +204,24 @@ export default function ProductSlugPage() {
     let finalName = displayName;
     let finalId = product._id;
 
-    if (isBelysiumProduct && selectedMaterial && selectedFinish) {
+    // 🚨 UPDATED NAME & ID: Handle B'elysium
+    if (isBelysium && selectedMaterial && selectedFinish && selectedSize) {
       const materialName =
         selectedMaterial === "solid" ? "Solid Wood" : "HDF Wood";
       const finishName =
         selectedFinish === "walnut brown" ? "Walnut Brown" : "Night";
-      finalName = `${displayName} (${materialName}, ${finishName})`;
+
+      finalName = `${displayName} (${materialName}, ${selectedSize}, ${finishName})`;
+
       const finishIdPart = selectedFinish.replace(/\s+/g, "_");
-      finalId = `${product._id}_${selectedMaterial}_${finishIdPart}`;
+      const sizeIdPart = selectedSize.replace(/\s/g, "_").replace(/×/g, "x");
+      finalId = `${product._id}_${selectedMaterial}_${sizeIdPart}_${finishIdPart}`;
+    }
+    // 🚨 NEW NAME & ID: Handle Lumivase
+    else if (isLumivase && selectedLumivaseOption) {
+      const option = LUMIVASE_OPTIONS[selectedLumivaseOption];
+      finalName = `${displayName} (${option.material})`;
+      finalId = `${product._id}_${selectedLumivaseOption.replace(/\s/g, "_")}`;
     }
 
     const customizedCartProduct = {
@@ -129,9 +238,13 @@ export default function ProductSlugPage() {
     addToCart,
     currentPrice,
     quantity,
-    displayName, // 'displayName' is still used, but now calculated by useMemo
+    displayName,
     selectedMaterial,
     selectedFinish,
+    selectedSize,
+    selectedLumivaseOption,
+    isBelysium,
+    isLumivase,
   ]);
 
   const navigateModalImage = useCallback(
@@ -146,16 +259,32 @@ export default function ProductSlugPage() {
   );
 
   useEffect(() => {
+    // 🚨 MODIFIED PRICE EFFECT: Handle both B'elysium and Lumivase
     if (!product) return;
-    let basePrice: number;
+
     if (isBelysium) {
-      basePrice =
-        selectedMaterial === "hdf" ? B_ELYS_PRICES.hdf : B_ELYS_PRICES.solid;
+      if (selectedMaterial && selectedSize) {
+        setCurrentPrice(B_ELYS_OPTIONS[selectedMaterial][selectedSize] || null);
+      } else {
+        setCurrentPrice(null);
+      }
+    } else if (isLumivase) {
+      if (selectedLumivaseOption) {
+        setCurrentPrice(LUMIVASE_OPTIONS[selectedLumivaseOption].price);
+      } else {
+        setCurrentPrice(null);
+      }
     } else {
-      basePrice = product.price as number;
+      setCurrentPrice(product.price as number);
     }
-    setCurrentPrice(basePrice);
-  }, [product, isBelysium, selectedMaterial]);
+  }, [
+    product,
+    isBelysium,
+    isLumivase,
+    selectedMaterial,
+    selectedSize,
+    selectedLumivaseOption,
+  ]);
 
   useEffect(() => {
     if (!product?.images?.length) return;
@@ -169,16 +298,6 @@ export default function ProductSlugPage() {
       if (idx >= 0) setCarouselState(([prev]) => [idx, idx > prev ? 1 : -1]);
     }
   }, [product, selectedImageId]);
-
-  // DELETED: useEffect for setCurrentVariant (since currentVariant state is removed)
-  /*
-  useEffect(() => {
-    if (!product || !selectedImageId) return;
-    const variants = productVariants[product.name] || [];
-    const variant = variants.find((v) => v.imageId === selectedImageId) || null;
-    setCurrentVariant(variant);
-  }, [selectedImageId, product]);
-  */
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -206,7 +325,7 @@ export default function ProductSlugPage() {
   // =================================================================
   // SECTION 3: DERIVED STATE & RENDER LOGIC
   // =================================================================
-  // 🚨 FIX: Removed redundant declaration of 'images', 'activeIndex', 'direction', 'activeImage'
+  // Variables are available from SECTION 1: HOOKS scope.
   const isEclipsera = displayName.includes("Eclipsera");
   const isEirene = displayName.includes("Eirene");
   const isIvorySilence = displayName.includes("Ivory Silence");
@@ -242,8 +361,11 @@ export default function ProductSlugPage() {
         { id: "experience", label: "Experience" },
       ];
 
-  const isBelysiumAndMissingOptions =
-    isBelysium && (!selectedMaterial || !selectedFinish);
+  // 🚨 UPDATED CHECK: Handle missing options for both products
+  const isBelysiumMissing =
+    isBelysium && (!selectedMaterial || !selectedSize || !selectedFinish);
+  const isLumivaseMissing = isLumivase && !selectedLumivaseOption;
+  const isMissingOptions = isBelysiumMissing || isLumivaseMissing;
 
   return (
     <main className="min-h-screen bg-background text-foreground p-6 sm:p-12">
@@ -349,47 +471,76 @@ export default function ProductSlugPage() {
                   </p>
                 </>
               )}
-              {isEirene && (
-                <>
-                  <p>
-                    Nature held in form sand, gemstones, and oak; a meeting
-                    place of nature and technology. A vessel that listens as
-                    much as she holds.
-                  </p>
-                  <p>Year: 2025 Origin: Biscenic</p>
-                  <p>
-                    The Lumivase Eirene was born from a desire to weave two
-                    realms into one vessel the stillness of nature and the quiet
-                    hum of modern life. Sand and gemstones recall rivers and
-                    earth, grounding her in memory, while the oak frame offers
-                    permanence. Sound threads through as a living pulse. She
-                    listens and responds, reminding us that technology can feel
-                    alive when it moves with nature, not against it.
-                  </p>
-                  <p>
-                    “She is a fragment of atmosphere, a gesture beyond living.”
-                  </p>
-                </>
-              )}
-
-              {isIvorySilence && (
-                <>
-                  <p>
-                    Sculpted from oak wood, framed in glass, and grounded in
-                    white sand and stones, the Lumivase holds a bonsai that
-                    represents harmony and resilience. It combines natural
-                    elements with thoughtful design and integrated technology to
-                    create calm, clarity, and balance in any space.
-                  </p>
-                </>
+              {(isEirene || isIvorySilence) && (
+                <p>
+                  Sculpted from oak wood, framed in glass, and grounded in white
+                  sand and stones, the Lumivase Eirene holds a bonsai that
+                  represents harmony and resilience. It combines natural
+                  elements with thoughtful design and integrated technology to
+                  create calm, clarity, and balance in any space.
+                </p>
               )}
             </div>
             <div className="border-y border-border divide-y divide-border mb-8">
               <div className="py-6">
                 <p className="text-2xl font-medium">
                   {formatCurrencyDisplay(currentPrice)}
+                  {/* 🚨 UPDATED TEXT: Indicate price is for starting size or requires selection */}
+                  {isMissingOptions && (
+                    <span className="text-sm text-muted-foreground ml-2">
+                      {" "}
+                      (Select options)
+                    </span>
+                  )}
                 </p>
               </div>
+
+              {/* 🚨 NEW: LUMIVASE PRODUCT TYPE SELECTION (If it is the base Lumivase) */}
+              {isLumivase && (
+                <div className="py-6">
+                  <p className="uppercase text-sm tracking-widest text-muted-foreground mb-4">
+                    Select Material
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {/* Map the consolidated Lumivase options */}
+                    {Object.entries(LUMIVASE_SELECTIONS).map(
+                      ([key, options]) => (
+                        <button
+                          key={key}
+                          onClick={() =>
+                            handleSelectProductType(key as LumivaseSelectionKey)
+                          }
+                          className={`text-left p-4 border-2 rounded-lg transition-all duration-200 ${
+                            selectedLumivaseOption === key
+                              ? "border-foreground bg-foreground/10 ring-2 ring-foreground/50"
+                              : "border-border hover:border-muted-foreground"
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            {/* 🚨 COLOR SWATCH ELEMENT */}
+                            <div
+                              className="w-6 h-6 rounded-full border border-muted-foreground/50"
+                              style={{ backgroundColor: options.color }}
+                            ></div>
+
+                            <span className="font-semibold text-foreground block">
+                              {options.displayName}
+                            </span>
+                          </div>
+
+                          <span className="text-sm text-muted-foreground block mt-1">
+                            {options.secondaryDetail}
+                          </span>
+                          <span className="text-sm text-muted-foreground block">
+                            {formatCurrencyDisplay(options.price)}
+                          </span>
+                        </button>
+                      )
+                    )}
+                  </div>
+                </div>
+              )}
+              {/* END LUMIVASE SELECTION */}
 
               {isBelysium && (
                 <>
@@ -400,7 +551,7 @@ export default function ProductSlugPage() {
                     </p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <button
-                        onClick={() => setSelectedMaterial("solid")}
+                        onClick={() => handleSelectMaterial("solid")} // 🚨 USE NEW HANDLER
                         className={`text-left p-4 border-2 rounded-lg transition-all duration-200 ${
                           selectedMaterial === "solid"
                             ? // 🚨 FIX 3: Change material selection ring/border from gold to black/foreground
@@ -412,11 +563,14 @@ export default function ProductSlugPage() {
                           Solid Wood
                         </span>
                         <span className="text-sm text-muted-foreground">
-                          {formatCurrencyDisplay(B_ELYS_PRICES.solid)}
+                          {formatCurrencyDisplay(
+                            B_ELYS_OPTIONS.solid["4.5 ft × 6 ft"]
+                          )}{" "}
+                          (4.5x6 ft starting)
                         </span>
                       </button>
                       <button
-                        onClick={() => setSelectedMaterial("hdf")}
+                        onClick={() => handleSelectMaterial("hdf")} // 🚨 USE NEW HANDLER
                         className={`text-left p-4 border-2 rounded-lg transition-all duration-200 ${
                           selectedMaterial === "hdf"
                             ? // 🚨 FIX 3: Change material selection ring/border from gold to black/foreground
@@ -428,11 +582,44 @@ export default function ProductSlugPage() {
                           HDF Wood
                         </span>
                         <span className="text-sm text-muted-foreground">
-                          {formatCurrencyDisplay(B_ELYS_PRICES.hdf)}
+                          {formatCurrencyDisplay(
+                            B_ELYS_OPTIONS.hdf["4.5 ft × 6 ft"]
+                          )}{" "}
+                          (4.5x6 ft starting)
                         </span>
                       </button>
                     </div>
                   </div>
+
+                  {/* 🚨 NEW: SIZE SELECTION (Conditionally render after material selection) */}
+                  {selectedMaterial && sizeOptions && (
+                    <div className="py-6">
+                      <p className="uppercase text-sm tracking-widest text-muted-foreground mb-4">
+                        Select Size
+                      </p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {Object.entries(sizeOptions).map(([size, price]) => (
+                          <button
+                            key={size}
+                            onClick={() => handleSelectSize(size as Size)} // 🚨 USE NEW HANDLER
+                            className={`text-left p-4 border-2 rounded-lg transition-all duration-200 ${
+                              selectedSize === size
+                                ? "border-foreground bg-foreground/10 ring-2 ring-foreground/50"
+                                : "border-border hover:border-muted-foreground"
+                            }`}
+                          >
+                            <span className="font-semibold text-foreground block">
+                              {size}
+                            </span>
+                            <span className="text-sm text-muted-foreground">
+                              {formatCurrencyDisplay(price)}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {/* END SIZE SELECTION */}
 
                   {/* FINISH SELECTION */}
                   <div className="py-6">
@@ -508,10 +695,11 @@ export default function ProductSlugPage() {
             </div>
 
             <Button
+              // 🚨 UPDATED DISABLED CHECK: Handle missing options for both products
               onClick={handleAddToCart}
-              disabled={isOutOfStock(product) || isBelysiumAndMissingOptions}
+              disabled={isOutOfStock(product) || isMissingOptions}
               className={`w-full font-bold uppercase tracking-wider px-8 py-4 rounded-md transition-colors ${
-                isOutOfStock(product) || isBelysiumAndMissingOptions
+                isOutOfStock(product) || isMissingOptions
                   ? "bg-muted text-muted-foreground cursor-not-allowed"
                   : // 🚨 FIX 5: Change button background to black and text to white for light mode minimalist
                     "bg-foreground text-background hover:bg-foreground/90"
@@ -519,8 +707,13 @@ export default function ProductSlugPage() {
             >
               {isOutOfStock(product)
                 ? "OUT OF STOCK"
+                : // 🚨 UPDATED MESSAGES: Priority based on dependency
+                isLumivase && !selectedLumivaseOption
+                ? "Select Product Type"
                 : isBelysium && !selectedMaterial
                 ? "Select a Material"
+                : isBelysium && !selectedSize
+                ? "Select a Size"
                 : isBelysium && !selectedFinish
                 ? "Select a Finish"
                 : "ADD TO CART"}
@@ -567,10 +760,21 @@ export default function ProductSlugPage() {
                                 traditional craftsmanship and timeless
                                 durability.
                               </p>
-                              {/* 🚨 FIX 7: Change price text from gold to black/foreground */}
-                              <span className="text-foreground font-medium">
-                                {formatCurrencyDisplay(B_ELYS_PRICES.solid)}
-                              </span>
+                              {/* 🚨 UPDATED DISPLAY: Show size options */}
+                              <ul className="list-disc ml-6 mt-4 space-y-2">
+                                {Object.entries(B_ELYS_OPTIONS.solid).map(
+                                  ([size, price]) => (
+                                    <li key={size}>
+                                      <span className="font-medium text-foreground">
+                                        {size}:
+                                      </span>{" "}
+                                      <span className="text-foreground font-medium">
+                                        {formatCurrencyDisplay(price)}
+                                      </span>
+                                    </li>
+                                  )
+                                )}
+                              </ul>
                             </div>
                             <div className="pt-8 border-t border-border">
                               <h3 className="text-foreground font-semibold text-lg mb-2">
@@ -581,10 +785,21 @@ export default function ProductSlugPage() {
                                 consistency. Ideal for those seeking a more
                                 contemporary aesthetic at a lower entry price.
                               </p>
-                              {/* 🚨 FIX 7: Change price text from gold to black/foreground */}
-                              <span className="text-foreground font-medium">
-                                {formatCurrencyDisplay(B_ELYS_PRICES.hdf)}
-                              </span>
+                              {/* 🚨 UPDATED DISPLAY: Show size options */}
+                              <ul className="list-disc ml-6 mt-4 space-y-2">
+                                {Object.entries(B_ELYS_OPTIONS.hdf).map(
+                                  ([size, price]) => (
+                                    <li key={size}>
+                                      <span className="font-medium text-foreground">
+                                        {size}:
+                                      </span>{" "}
+                                      <span className="text-foreground font-medium">
+                                        {formatCurrencyDisplay(price)}
+                                      </span>
+                                    </li>
+                                  )
+                                )}
+                              </ul>
                             </div>
                             <div className="pt-8 border-t border-border">
                               <h3 className="text-foreground font-semibold text-lg mb-2">
@@ -706,7 +921,10 @@ export default function ProductSlugPage() {
                           </p>
                         )}
                       </>
-                    ) : isEclipsera ? (
+                    ) : isEclipsera ||
+                      isEirene ||
+                      isIvorySilence ||
+                      isLumivase ? (
                       <>
                         {activeTab === "specifications" && (
                           <div>
@@ -714,29 +932,26 @@ export default function ProductSlugPage() {
                               Design & Materials
                             </h3>
                             <ul className="list-disc ml-6 space-y-2">
+                              {/* Display selected type material */}
+                              {selectedLumivaseOption && (
+                                <li>
+                                  <strong>Type:</strong>{" "}
+                                  {selectedLumivaseOption}
+                                </li>
+                              )}
                               <li>
-                                <strong>Frame:</strong> Black oak wood with a
-                                matte finish
+                                <strong>Frame:</strong> Hard Wood (Mansonia /
+                                Natural Oak / Obsidian Black)
                               </li>
                               <li>
-                                <strong>Encasement:</strong> Clear glass for
-                                360° immersion
+                                <strong>Encasement:</strong> Crystal clear glass
                               </li>
                               <li>
-                                <strong>Base Layer:</strong> Polished black
-                                pebbles, grounding the composition
+                                <strong>Base Layer:</strong> White sand or Black
+                                pebbles (depending on type)
                               </li>
                               <li>
-                                <strong>Core:</strong> Central illumination with
-                                smooth, full spectrum transitions
-                              </li>
-                              <li>
-                                <strong>Accent:</strong> Lava halo glow,
-                                circling the base like an eclipse
-                              </li>
-                              <li>
-                                <strong>Geometry:</strong> Design proportions
-                                aligned with golden ratio and orbital symmetry
+                                <strong>Flora:</strong> Bonsai tree
                               </li>
                             </ul>
                           </div>
@@ -753,12 +968,10 @@ export default function ProductSlugPage() {
                                   spectrum
                                 </li>
                                 <li>
-                                  Lava halo base provides steady ambient glow
+                                  Lava halo base or White glow (depending on
+                                  type)
                                 </li>
-                                <li>
-                                  Adjustable intensity for different moods and
-                                  settings
-                                </li>
+                                <li>Adjustable intensity</li>
                               </ul>
                             </div>
                             <div className="pt-6 border-t border-border">
@@ -776,168 +989,32 @@ export default function ProductSlugPage() {
                         )}
                         {activeTab === "editions" && (
                           <div className="space-y-6">
+                            {/* Simplified Editions */}
                             <div>
                               <h3 className="text-foreground font-semibold text-lg mb-2">
-                                Eclipsera Base Edition
+                                Base Edition
                               </h3>
-                              <ul className="list-disc ml-6 space-y-2">
-                                <li>Black oak and glass frame</li>
-                                <li>
-                                  Bonsai installation with black pebble
-                                  foundation
-                                </li>
-                                <li>
-                                  Full spectrum lighting and lava halo base
-                                </li>
-                                <li>
-                                  Geometric proportions aligned with golden
-                                  ratio
-                                </li>
-                                <li>Bluetooth audio system</li>
-                              </ul>
                               <p className="mt-3 text-muted-foreground italic">
-                                For those who seek a balance of modern design,
-                                natural presence, and geometric order.
+                                Includes essential integrated technology and
+                                craftsmanship.
                               </p>
                             </div>
                             <div className="pt-6 border-t border-border">
                               <h3 className="text-foreground font-semibold text-lg mb-2">
-                                Eclipsera Sentient Edition
+                                Sentient Edition
                               </h3>
-                              <ul className="list-disc ml-6 space-y-2">
-                                <li>Everything in the Base Edition</li>
-                                <li>
-                                  <strong>AI Sentient Module:</strong> listens
-                                  and responds with voice interaction
-                                </li>
-                                <li>
-                                  Personalized meditation and wellness guidance
-                                </li>
-                                <li>
-                                  Lighting and audio that adapt to time, mood,
-                                  and environment
-                                </li>
-                                <li>
-                                  Geometry driven adaptive modes inspired by
-                                  lunar and orbital cycles
-                                </li>
-                              </ul>
                               <p className="mt-3 text-muted-foreground italic">
-                                For those who want an interactive artifact that
-                                listens, adapts, and restores harmony through
-                                proportion and presence.
+                                Includes the AI Sentient Module for interactive
+                                wellness guidance.
                               </p>
                             </div>
                           </div>
                         )}
                         {activeTab === "experience" && (
                           <p>
-                            The Lumivase Eclipsera draws from both astronomy and
-                            geometry. Its glowing core, eclipse like halo, and
-                            balanced proportions make it a vessel of rhythm and
-                            alignment. It transforms light, sound, and form into
-                            a continuous dialogue of balance and renewal.
-                          </p>
-                        )}
-                      </>
-                    ) : isEirene || isIvorySilence ? (
-                      <>
-                        {activeTab === "specifications" && (
-                          <div>
-                            <h3 className="text-foreground font-semibold text-lg mb-2">
-                              Design & Materials
-                            </h3>
-                            <ul className="list-disc ml-6 space-y-2">
-                              <li>
-                                <strong>Frame:</strong> Solid oak wood with a
-                                natural matte finish
-                              </li>
-                              <li>
-                                <strong>Encasement:</strong> Crystal clear glass
-                                for 360° viewing
-                              </li>
-                              <li>
-                                <strong>Base Layer:</strong> White sand shaped
-                                into flowing patterns
-                              </li>
-                              <li>
-                                <strong>Stones:</strong> Selected white rocks
-                                for purity and grounding
-                              </li>
-                              <li>
-                                <strong>Flora:</strong> Bonsai tree, crafted and
-                                shaped with care
-                              </li>
-                            </ul>
-                          </div>
-                        )}
-                        {activeTab === "technology" && (
-                          <div>
-                            <h3 className="text-foreground font-semibold text-lg mb-2">
-                              Bluetooth Audio Resonance System
-                            </h3>
-                            <ul className="list-disc ml-6 space-y-2">
-                              <li>
-                                Built in sound chamber for ambient soundscapes
-                              </li>
-                              <li>
-                                Supports curated playlists: ASMR tones, natural
-                                harmonics, meditation tracks
-                              </li>
-                            </ul>
-                          </div>
-                        )}
-                        {activeTab === "editions" && (
-                          <div className="space-y-6">
-                            <div>
-                              <h3 className="text-foreground font-semibold text-lg mb-2">
-                                Eirene Base Edition
-                              </h3>
-                              <ul className="list-disc ml-6 space-y-2">
-                                <li>Handcrafted oak and glass structure</li>
-                                <li>White sand and white rock foundation</li>
-                                <li>Bonsai installation</li>
-                                <li>
-                                  Bluetooth sound system with ambient resonance
-                                </li>
-                              </ul>
-                              <p className="mt-3 text-muted-foreground italic">
-                                Created for those who value simplicity and a
-                                quiet sense of wellness.
-                              </p>
-                            </div>
-                            <div className="pt-6 border-t border-border">
-                              <h3 className="text-foreground font-semibold text-lg mb-2">
-                                Eirene Sentient Edition
-                              </h3>
-                              <ul className="list-disc ml-6 space-y-2">
-                                <li>Everything in the Base Edition</li>
-                                <li>
-                                  <strong>AI Sentient Module:</strong> listens
-                                  and responds with voice interaction
-                                </li>
-                                <li>
-                                  Personalized guidance for meditation and
-                                  affirmations
-                                </li>
-                                <li>
-                                  Adaptive soundscapes that shift with mood,
-                                  time, and environment
-                                </li>
-                              </ul>
-                              <p className="mt-3 text-muted-foreground italic">
-                                Designed as a more interactive wellness
-                                companion.
-                              </p>
-                            </div>
-                          </div>
-                        )}
-                        {activeTab === "experience" && (
-                          <p>
-                            The Lumivase Eirene is a piece that restores calm
-                            through balance. It brings together natural beauty,
-                            crafted design, and sound to create a space of
-                            serenity.
+                            The Lumivase is a vessel of rhythm and alignment,
+                            transforming light, sound, and form into a
+                            continuous dialogue of balance and renewal.
                           </p>
                         )}
                       </>
