@@ -444,17 +444,31 @@ export default function ProductSlugPage() {
             <div className="text-muted-foreground leading-relaxed mb-8 flex flex-col space-y-4">
               {isBelysium && (
                 <>
+                  <p>A sanctuary of rest.</p>
+
                   <p>
-                    To rest in B’elysium is to enter a dialogue between silence
-                    and presence. The bed cradle the body as it listens,
-                    responds, and heals. It is designed as both a centerpiece of
-                    living art and a wellness system, bridging ancient rituals
-                    of rest with futuristic intelligence.
+                    Year: 2025
+                    <br /> Origin: Biscenic
                   </p>
-                  <p className="pt-2 italic">
-                    B’elysium is not simply furniture.
-                    <br />
-                    It is a portal to renewal.
+
+                  <p>
+                    B’elysium was envisioned as a remedy, a place where body,
+                    mind, and memory realign. Sculpted from Ìrókò, its frame
+                    carries both heritage and strength. Hidden vaults and
+                    discreet drawers keep personal ritual close, while an
+                    integrated sound system weaves tones that calm the nervous
+                    system and invite deep restoration.
+                  </p>
+
+                  <p>
+                    More than furniture, it is a chamber of renewal a living
+                    instrument that listens, restores, and holds the quiet
+                    weight of dreams.
+                  </p>
+
+                  <p>
+                    Materials: Ìrókò, hidden vaults, three drawers with swipe
+                    card access, integrated sound system.
                   </p>
                 </>
               )}
@@ -477,14 +491,42 @@ export default function ProductSlugPage() {
                   </p>
                 </>
               )}
-              {(isEirene || isIvorySilence) && (
-                <p>
-                  Sculpted from oak wood, framed in glass, and grounded in white
-                  sand and stones, the Lumivase Eirene holds a bonsai that
-                  represents harmony and resilience. It combines natural
-                  elements with thoughtful design and integrated technology to
-                  create calm, clarity, and balance in any space.
-                </p>
+              {isEirene && (
+                <>
+                  <p>
+                    Nature held in form sand, gemstones, and oak; a meeting
+                    place of nature and technology. A vessel that listens as
+                    much as she holds.
+                  </p>
+                  <p>
+                    Year: 2025 <br />
+                    Origin: Biscenic
+                  </p>
+                  <p>
+                    The Lumivase Eirene was born from a desire to weave two
+                    realms into one vessel the stillness of nature and the quiet
+                    hum of modern life. Sand and gemstones recall rivers and
+                    earth, grounding her in memory, while the oak frame offers
+                    permanence. Sound threads through as a living pulse. She
+                    listens and responds, reminding us that technology can feel
+                    alive when it moves with nature, not against it.
+                  </p>
+                  <p>
+                    “She is a fragment of atmosphere, a gesture beyond living.”
+                  </p>
+                </>
+              )}
+
+              {isIvorySilence && (
+                <>
+                  <p>
+                    Sculpted from oak wood, framed in glass, and grounded in
+                    white sand and stones, the Lumivase holds a bonsai that
+                    represents harmony and resilience. It combines natural
+                    elements with thoughtful design and integrated technology to
+                    create calm, clarity, and balance in any space.
+                  </p>
+                </>
               )}
             </div>
             <div className="border-y border-border divide-y divide-border mb-8">
@@ -948,29 +990,32 @@ export default function ProductSlugPage() {
                         {activeTab === "specifications" && (
                           <div>
                             <h3 className="text-foreground font-semibold text-lg mb-2">
-                              Design & Materials
+                              DESIGN & MATERIALITY
                             </h3>
                             <ul className="list-disc ml-6 space-y-2">
                               {/* Display selected type material */}
                               {selectedLumivaseOption && (
                                 <li>
-                                  <strong>Type:</strong>{" "}
+                                  <strong>Frame:</strong>{" "}
                                   {selectedLumivaseOption}
                                 </li>
                               )}
                               <li>
-                                <strong>Frame:</strong> Hard Wood (Mansonia /
-                                Natural Oak / Obsidian Black)
+                                <strong>Frame:</strong> Premium hardwood.
+                                Mansonia, Natural Oak, Obsidian Black
                               </li>
                               <li>
-                                <strong>Encasement:</strong> Crystal clear glass
+                                <strong>Encasement:</strong> Crystal clear
+                                acrylic glas
                               </li>
                               <li>
-                                <strong>Base Layer:</strong> White sand or Black
-                                pebbles (depending on type)
+                                <strong>Base Layer:</strong> Curated foundation
+                                of gemstones, white sand, black pebbles, or
+                                natural rocks
                               </li>
                               <li>
-                                <strong>Flora:</strong> Bonsai tree
+                                <strong>Flora:</strong> Premium artificial
+                                bonsai sculpture
                               </li>
                             </ul>
                           </div>
@@ -983,14 +1028,13 @@ export default function ProductSlugPage() {
                               </h3>
                               <ul className="list-disc ml-6 space-y-2">
                                 <li>
-                                  Central core transitions across full RGB
-                                  spectrum
+                                  Central core with full spectrum RGB
+                                  transitions
                                 </li>
                                 <li>
-                                  Lava halo base or White glow (depending on
-                                  type)
+                                  Radiant lava halo illumination at the base
                                 </li>
-                                <li>Adjustable intensity</li>
+                                <li>Adjustable brightness and ambience</li>
                               </ul>
                             </div>
                             <div className="pt-6 border-t border-border">
@@ -999,8 +1043,12 @@ export default function ProductSlugPage() {
                               </h3>
                               <ul className="list-disc ml-6 space-y-2">
                                 <li>
-                                  Supports meditative tones, ASMR soundscapes,
-                                  and ambient audio
+                                  Tuned for meditative tones, ASMR atmospheres,
+                                  and ambient soundscapes
+                                </li>
+                                <li>
+                                  Soft, immersive resonance that settles the
+                                  room
                                 </li>
                               </ul>
                             </div>
@@ -1013,18 +1061,54 @@ export default function ProductSlugPage() {
                               <h3 className="text-foreground font-semibold text-lg mb-2">
                                 Base Edition
                               </h3>
-                              <p className="mt-3 text-muted-foreground italic">
-                                Includes essential integrated technology and
-                                craftsmanship.
+                              <ul className="list-disc ml-6 space-y-2">
+                                <li>
+                                  Hand crafted oak frame with acrylic glass
+                                  enclosure
+                                </li>
+                                <li>
+                                  Natural base layers: white sand, rocks,
+                                  gemstones, pebbles, and artificial bonsai
+                                </li>
+                                <li>
+                                  Integrated Bluetooth ambient resonance system
+                                </li>
+                              </ul>
+                              <p className="mt-3 text-muted-foreground ">
+                                Created for those who value simplicity,
+                                presence, and a restored sense of calm.
                               </p>
                             </div>
                             <div className="pt-6 border-t border-border">
                               <h3 className="text-foreground font-semibold text-lg mb-2">
                                 Sentient Edition
                               </h3>
-                              <p className="mt-3 text-muted-foreground italic">
-                                Includes the AI Sentient Module for interactive
-                                wellness guidance.
+                              <ul className="list-disc ml-6 space-y-2">
+                                <li>Natural voice interaction</li>
+                                <li>
+                                  Personalized meditation cues and affirmation
+                                  guidance
+                                </li>
+                                <li>
+                                  Mood responsive soundscapes that shift with
+                                  time and environment
+                                </li>
+                                <li>
+                                  Hand crafted oak frame with acrylic glass
+                                  enclosure
+                                </li>
+                                <li>
+                                  Natural base layers: white sand, rocks,
+                                  gemstones, pebbles, and artificial bonsai
+                                </li>
+                                <li>
+                                  Integrated Bluetooth ambient resonance system
+                                </li>
+                              </ul>
+
+                              <p className="mt-3 text-muted-foreground ">
+                                Designed as an interactive wellness companion,
+                                attentive, adaptive, and quietly alive.
                               </p>
                             </div>
                           </div>
@@ -1032,8 +1116,8 @@ export default function ProductSlugPage() {
                         {activeTab === "experience" && (
                           <p>
                             The Lumivase is a vessel of rhythm and alignment,
-                            transforming light, sound, and form into a
-                            continuous dialogue of balance and renewal.
+                            designed to enhance your environment through gentle
+                            sensory harmony and a quiet shift in atmosphere.
                           </p>
                         )}
                       </>
