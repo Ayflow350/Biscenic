@@ -54,12 +54,12 @@ type LumivaseType = "Eirene" | "Eclipsera";
 const LUMIVASE_OPTIONS = {
   Eirene: {
     material: "Natural Oak",
-    price: 850000,
+    price: 2000000,
     color: "#c09b6e", // Placeholder color for Eirene wood
   },
   Eclipsera: {
     material: "Obsidian Black",
-    price: 950000,
+    price: 2000000,
     color: "#1C1C1C", // Placeholder color for Eclipsera wood
   },
 };
@@ -71,13 +71,13 @@ const LUMIVASE_SELECTIONS: Record<
 > = {
   Eirene: {
     displayName: "Lumivase Eirene",
-    price: 850000,
+    price: 2000000,
     secondaryDetail: "Natural Oak",
     color: LUMIVASE_OPTIONS.Eirene.color,
   },
   Eclipsera: {
     displayName: "Lumivase Eclipsera",
-    price: 950000,
+    price: 2000000,
     secondaryDetail: "Obsidian Black",
     color: LUMIVASE_OPTIONS.Eclipsera.color,
   },
