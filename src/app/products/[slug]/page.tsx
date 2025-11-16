@@ -37,11 +37,12 @@ const getMainImageId = (images: ProductImage[] = []) =>
 // --- B'elysium Options ---
 type Material = "solid" | "hdf";
 type Size = "4.5 ft × 6 ft" | "6 ft × 6 ft";
+type Finish = "walnut brown" | "night";
 
 const B_ELYS_OPTIONS = {
   solid: {
-    "4.5 ft × 6 ft": 2700000,
-    "6 ft × 6 ft": 3600000,
+    "4.5 ft × 6 ft": 2800000,
+    "6 ft × 6 ft": 3733000,
   },
   hdf: {
     "4.5 ft × 6 ft": 2000000,
@@ -71,13 +72,13 @@ const LUMIVASE_SELECTIONS: Record<
 > = {
   Eirene: {
     displayName: "Lumivase Eirene",
-    price: 2000000,
+    price: LUMIVASE_OPTIONS.Eirene.price,
     secondaryDetail: "Natural Oak",
     color: LUMIVASE_OPTIONS.Eirene.color,
   },
   Eclipsera: {
     displayName: "Lumivase Eclipsera",
-    price: 2000000,
+    price: LUMIVASE_OPTIONS.Eclipsera.price,
     secondaryDetail: "Obsidian Black",
     color: LUMIVASE_OPTIONS.Eclipsera.color,
   },
@@ -160,6 +161,22 @@ export default function ProductSlugPage() {
   >(null);
   const [currentPrice, setCurrentPrice] = useState<number | null>(null);
 
+  // 🚨 CRITICAL FIX: Image ID mapping function using CURRENT MOCK IDS
+  // This logic MUST be correct to map your selected options to the specific image IDs in mockProductData.
+  const findImageIdByDisplayName = useCallback(
+    (targetName: string): string | null => {
+      const images = product?.images || [];
+      // Use the displayNameOverride property for mapping options to images
+      return (
+        images.find(
+          (img: ProductImage & { displayNameOverride?: string }) =>
+            img.displayNameOverride === targetName
+        )?._id || null
+      );
+    },
+    [product]
+  );
+
   // 🚨 NEW HELPER: Get the available size options based on selected material
   const sizeOptions = useMemo(() => {
     if (selectedMaterial && B_ELYS_OPTIONS[selectedMaterial]) {
@@ -168,21 +185,50 @@ export default function ProductSlugPage() {
     return null;
   }, [selectedMaterial]);
 
-  // 🚨 NEW HELPER: Reset size when material changes
-  const handleSelectMaterial = useCallback((material: Material) => {
-    setSelectedMaterial(material);
-    setSelectedSize(null);
-    setCurrentPrice(null);
-  }, []);
+  // 🚨 NEW HANDLER: Reset size when material changes AND UPDATE IMAGE ID
+  const handleSelectMaterial = useCallback(
+    (material: Material) => {
+      setSelectedMaterial(material);
+      setSelectedSize(null);
+      setSelectedFinish(null); // Reset finish too
+      setCurrentPrice(null);
 
-  // 🚨 NEW HELPER: Set size and update price
+      // 🚨 FIX 1: When material is changed/reset, revert to the Product's Main Image ID
+      setSelectedImageId(getMainImageId(product?.images));
+    },
+    [product]
+  );
+
+  // 🚨 NEW HANDLER: Set size and update price
   const handleSelectSize = useCallback((size: Size) => {
     setSelectedSize(size);
   }, []);
 
-  const handleSelectProductType = useCallback((type: LumivaseType) => {
-    setSelectedLumivaseOption(type);
-  }, []);
+  // 🚨 NEW HANDLER: Set finish AND UPDATE IMAGE ID
+  const handleSelectFinish = useCallback(
+    (finish: Finish) => {
+      setSelectedFinish(finish);
+      // Determine the target displayNameOverride based on finish
+      const targetName =
+        finish === "walnut brown"
+          ? "B'elysium Walnut Brown"
+          : "B'elysium Night Edition";
+      const newImageId = findImageIdByDisplayName(targetName);
+      setSelectedImageId(newImageId);
+    },
+    [findImageIdByDisplayName, selectedMaterial]
+  );
+
+  // 🚨 NEW HANDLER: Set Lumivase type AND UPDATE IMAGE ID
+  const handleSelectProductType = useCallback(
+    (type: LumivaseType) => {
+      setSelectedLumivaseOption(type);
+      // The image name is the type name itself (Eirene or Eclipsera)
+      const newImageId = findImageIdByDisplayName(type);
+      setSelectedImageId(newImageId);
+    },
+    [findImageIdByDisplayName]
+  );
 
   const handleAddToCart = useCallback(() => {
     // 🚨 UPDATED CHECK: Handle missing options for both products
@@ -287,6 +333,7 @@ export default function ProductSlugPage() {
   ]);
 
   useEffect(() => {
+    // 🚨 FIX 9: Update main carousel image on selectedImageId change
     if (!product?.images?.length) return;
     if (!selectedImageId) {
       const mainId = getMainImageId(product.images);
@@ -325,7 +372,6 @@ export default function ProductSlugPage() {
   // =================================================================
   // SECTION 3: DERIVED STATE & RENDER LOGIC
   // =================================================================
-  // Variables are available from SECTION 1: HOOKS scope.
   const isEclipsera = displayName.includes("Eclipsera");
   const isEirene = displayName.includes("Eirene");
   const isIvorySilence = displayName.includes("Ivory Silence");
@@ -340,6 +386,7 @@ export default function ProductSlugPage() {
     }).format(val ?? 0);
 
   const selectImageByIndex = (idx: number) => {
+    // 🚨 FIX 10: Clicks update the active image/index
     setCarouselState(([cur]) => [idx, idx > cur ? 1 : -1]);
     setSelectedImageId(product?.images?.[idx]?._id ?? null);
   };
@@ -405,6 +452,7 @@ export default function ProductSlugPage() {
                   }}
                 >
                   <Image
+                    // 🚨 FIX 10: activeImage is used here
                     src={activeImage?.url ?? "/placeholder.jpg"}
                     alt={displayName}
                     fill
@@ -444,31 +492,17 @@ export default function ProductSlugPage() {
             <div className="text-muted-foreground leading-relaxed mb-8 flex flex-col space-y-4">
               {isBelysium && (
                 <>
-                  <p>A sanctuary of rest.</p>
-
                   <p>
-                    Year: 2025
-                    <br /> Origin: Biscenic
+                    To rest in B’elysium is to enter a dialogue between silence
+                    and presence. The bed cradle the body as it listens,
+                    responds, and heals. It is designed as both a centerpiece of
+                    living art and a wellness system, bridging ancient rituals
+                    of rest with futuristic intelligence.
                   </p>
-
-                  <p>
-                    B’elysium was envisioned as a remedy, a place where body,
-                    mind, and memory realign. Sculpted from Ìrókò, its frame
-                    carries both heritage and strength. Hidden vaults and
-                    discreet drawers keep personal ritual close, while an
-                    integrated sound system weaves tones that calm the nervous
-                    system and invite deep restoration.
-                  </p>
-
-                  <p>
-                    More than furniture, it is a chamber of renewal a living
-                    instrument that listens, restores, and holds the quiet
-                    weight of dreams.
-                  </p>
-
-                  <p>
-                    Materials: Ìrókò, hidden vaults, three drawers with swipe
-                    card access, integrated sound system.
+                  <p className="pt-2 italic">
+                    B’elysium is not simply furniture.
+                    <br />
+                    It is a portal to renewal.
                   </p>
                 </>
               )}
@@ -491,58 +525,19 @@ export default function ProductSlugPage() {
                   </p>
                 </>
               )}
-              {isEirene && (
-                <>
-                  <p>
-                    Nature held in form sand, gemstones, and oak; a meeting
-                    place of nature and technology. A vessel that listens as
-                    much as she holds.
-                  </p>
-                  <p>
-                    Year: 2025 <br />
-                    Origin: Biscenic
-                  </p>
-                  <p>
-                    The Lumivase Eirene was born from a desire to weave two
-                    realms into one vessel the stillness of nature and the quiet
-                    hum of modern life. Sand and gemstones recall rivers and
-                    earth, grounding her in memory, while the oak frame offers
-                    permanence. Sound threads through as a living pulse. She
-                    listens and responds, reminding us that technology can feel
-                    alive when it moves with nature, not against it.
-                  </p>
-                  <p>
-                    “She is a fragment of atmosphere, a gesture beyond living.”
-                  </p>
-                </>
-              )}
-
-              {isIvorySilence && (
-                <>
-                  <p>
-                    Sculpted from oak wood, framed in glass, and grounded in
-                    white sand and stones, the Lumivase holds a bonsai that
-                    represents harmony and resilience. It combines natural
-                    elements with thoughtful design and integrated technology to
-                    create calm, clarity, and balance in any space.
-                  </p>
-                </>
+              {(isEirene || isIvorySilence) && (
+                <p>
+                  Sculpted from oak wood, framed in glass, and grounded in white
+                  sand and stones, the Lumivase Eirene holds a bonsai that
+                  represents harmony and resilience. It combines natural
+                  elements with thoughtful design and integrated technology to
+                  create calm, clarity, and balance in any space.
+                </p>
               )}
             </div>
-            <div className="border-y border-border divide-y divide-border mb-8">
-              <div className="py-6">
-                <p className="text-2xl font-medium">
-                  {formatCurrencyDisplay(currentPrice)}
-                  {/* 🚨 UPDATED TEXT: Indicate price is for starting size or requires selection */}
-                  {isMissingOptions && (
-                    <span className="text-sm text-muted-foreground ml-2">
-                      {" "}
-                      (Select options)
-                    </span>
-                  )}
-                </p>
-              </div>
 
+            {/* --- OPTIONS AND BUTTON BLOCK START --- */}
+            <div className="border-y border-border divide-y divide-border mb-8">
               {/* 🚨 NEW: LUMIVASE PRODUCT TYPE SELECTION (If it is the base Lumivase) */}
               {isLumivase && (
                 <div className="py-6">
@@ -676,7 +671,7 @@ export default function ProductSlugPage() {
                     </p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <button
-                        onClick={() => setSelectedFinish("walnut brown")}
+                        onClick={() => handleSelectFinish("walnut brown")}
                         className={`p-4 border-2 rounded-lg transition-all duration-200 ${
                           selectedFinish === "walnut brown"
                             ? // 🚨 FIX 4: Change finish selection ring/border from gold to black/foreground
@@ -753,6 +748,20 @@ export default function ProductSlugPage() {
                   </p>
                 </div>
               )}
+
+              {/* 🚨 PRICE DISPLAY (MOVED TO THE END OF OPTIONS BLOCK) */}
+              <div className="py-6">
+                <p className="text-2xl font-medium">
+                  {formatCurrencyDisplay(currentPrice)}
+                  {/* Indicate if price requires selection */}
+                  {isMissingOptions && (
+                    <span className="text-sm text-muted-foreground ml-2">
+                      {" "}
+                      (Select options)
+                    </span>
+                  )}
+                </p>
+              </div>
             </div>
 
             <Button
@@ -996,8 +1005,11 @@ export default function ProductSlugPage() {
                               {/* Display selected type material */}
                               {selectedLumivaseOption && (
                                 <li>
-                                  <strong>Frame:</strong>{" "}
-                                  {selectedLumivaseOption}
+                                  <strong>Type:</strong>{" "}
+                                  {
+                                    LUMIVASE_SELECTIONS[selectedLumivaseOption]
+                                      .secondaryDetail
+                                  }
                                 </li>
                               )}
                               <li>
@@ -1014,8 +1026,7 @@ export default function ProductSlugPage() {
                                 natural rocks
                               </li>
                               <li>
-                                <strong>Flora:</strong> Premium artificial
-                                bonsai sculpture
+                                <strong>Flora:</strong> Bonsai tree
                               </li>
                             </ul>
                           </div>
@@ -1028,13 +1039,13 @@ export default function ProductSlugPage() {
                               </h3>
                               <ul className="list-disc ml-6 space-y-2">
                                 <li>
-                                  Central core with full spectrum RGB
-                                  transitions
+                                  Central core transitions across full RGB
+                                  spectrum
                                 </li>
                                 <li>
                                   Radiant lava halo illumination at the base
                                 </li>
-                                <li>Adjustable brightness and ambience</li>
+                                <li>Adjustable intensity</li>
                               </ul>
                             </div>
                             <div className="pt-6 border-t border-border">
@@ -1116,8 +1127,8 @@ export default function ProductSlugPage() {
                         {activeTab === "experience" && (
                           <p>
                             The Lumivase is a vessel of rhythm and alignment,
-                            designed to enhance your environment through gentle
-                            sensory harmony and a quiet shift in atmosphere.
+                            transforming light, sound, and form into a
+                            continuous dialogue of balance and renewal.
                           </p>
                         )}
                       </>
