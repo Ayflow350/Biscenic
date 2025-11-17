@@ -3,13 +3,13 @@ import { useCheckout } from "@/context/checkout-context";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { CreditCard, Truck } from "lucide-react";
+import { CreditCard } from "lucide-react";
 
 export function PaymentStep() {
   const { checkoutData, updateCheckoutData, goToNextStep, goToPreviousStep } =
     useCheckout();
 
-  const handlePaymentMethodChange = (value: "flutterwave" | "cod") => {
+  const handlePaymentMethodChange = (value: "flutterwave") => {
     updateCheckoutData({ paymentMethod: value });
   };
 
@@ -23,7 +23,7 @@ export function PaymentStep() {
       <div className="text-center md:text-left">
         <h2 className="text-2xl font-semibold">Payment Method</h2>
         <p className="text-muted-foreground text-sm mt-1">
-          How would you like to pay for your order?
+          Choose your preferred payment method
         </p>
       </div>
 
@@ -46,26 +46,7 @@ export function PaymentStep() {
                 Pay with Flutterwave
               </p>
               <p className="text-sm text-muted-foreground leading-snug">
-                Securely pay with your card, bank transfer, or USSD.
-              </p>
-            </div>
-          </Label>
-        </div>
-
-        {/* Cash on Delivery Option */}
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 border rounded-md p-4 has-[[data-state=checked]]:border-primary has-[[data-state=checked]]:bg-primary/5 transition-all">
-          <RadioGroupItem value="cod" id="cod" />
-          <Label
-            htmlFor="cod"
-            className="flex items-start sm:items-center gap-4 cursor-pointer w-full"
-          >
-            <Truck className="h-6 w-6 text-muted-foreground flex-shrink-0" />
-            <div className="flex-1">
-              <p className="font-semibold text-base sm:text-lg">
-                Pay on Delivery
-              </p>
-              <p className="text-sm text-muted-foreground leading-snug">
-                Pay with cash or transfer upon arrival.
+                Secure payment via card, bank transfer, or USSD.
               </p>
             </div>
           </Label>
